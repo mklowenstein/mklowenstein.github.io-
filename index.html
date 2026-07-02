@@ -806,7 +806,7 @@ function initPlayer(stateId) {
     isCapital: true,
     hp: isMajor ? 20 : 15,
     maxHp: isMajor ? 20 : 15,
-    defense: 5 + (state.defenseBonus || 0),
+    defense: 8 + (state.defenseBonus || 0),
     buildings: [],
     population: isMajor ? 3 : 2
   });
@@ -944,6 +944,29 @@ function getUnitDefense(unit) {
   let def = uDef.defense;
   if (unit.owner !== 'barbarian' && cities.some(c => c.owner === unit.owner && c.buildings.includes('barracks'))) def += 1;
   return def;
+}
+
+function getFlankingBonus(attackerOwner, targetCol, targetRow) {
+  const neighbors = getHexNeighbors(targetCol, targetRow);
+  const allFriendly = [...units, ...barbarians];
+  let flankers = 0;
+  for (const n of neighbors) {
+    const friendly = allFriendly.find(u => u.col === n.col && u.row === n.row && u.owner === attackerOwner);
+    if (friendly) flankers++;
+  }
+  return flankers;
+}
+
+function isCityEncircled(city) {
+  const neighbors = getHexNeighbors(city.col, city.row);
+  const passable = neighbors.filter(n => TERRAIN[mapData[n.row][n.col].terrain].moveCost < 99);
+  if (passable.length === 0) return false;
+  const allHostile = [...units, ...barbarians];
+  for (const n of passable) {
+    const hostile = allHostile.find(u => u.col === n.col && u.row === n.row && u.owner !== city.owner);
+    if (!hostile) return false;
+  }
+  return true;
 }
 
 // ============================================================
@@ -1455,6 +1478,9 @@ function moveUnit(unit, toCol, toRow) {
 function attackTarget(attacker, col, row) {
   const uDef = UNITS[attacker.type];
   let atkPower = getUnitAttack(attacker);
+  const flanking = getFlankingBonus(attacker.owner, col, row);
+  atkPower += flanking;
+  if (flanking > 0) showToast(`Flanking bonus: +${flanking} attack!`);
 
   const allEnemyUnits = [...units, ...barbarians];
   const targetUnit = allEnemyUnits.find(u => u.col === col && u.row === row && u.owner !== attacker.owner);
@@ -1481,12 +1507,12 @@ function attackTarget(attacker, col, row) {
       if (isBarbarian) {
         barbarians = barbarians.filter(u => u.id !== targetUnit.id);
         players[currentPlayer].gold += 3;
-        showToast(`🗡️ Barbarian destroyed! +3 gold`);
+        showToast(`Barbarian destroyed! +3 gold`);
       } else {
         units = units.filter(u => u.id !== targetUnit.id);
         showToast(`${STATES[targetUnit.owner].name} ${defDef.name} destroyed!`);
       }
-      if (uDef.melee) {
+      if (uDef.melee && !targetCity) {
         attacker.col = col; attacker.row = row;
         mapData[row][col].owner = attacker.owner;
       }
@@ -1499,9 +1525,13 @@ function attackTarget(attacker, col, row) {
     }
   }
 
-  if (targetCity) {
+  if (targetCity && !targetUnit) {
     let atkStr = atkPower;
     if (uDef.siegeBonus) atkStr += uDef.siegeBonus;
+    if (!uDef.siegeBonus) {
+      if (attacker.type === 'militia') atkStr = Math.floor(atkStr * 0.3);
+      else atkStr = Math.floor(atkStr * 0.5);
+    }
     const damage = Math.max(1, atkStr - Math.floor(targetCity.defense / 3));
     targetCity.hp -= damage;
     showToast(`${uDef.icon} dealt ${damage} dmg to ${targetCity.name}!`);
@@ -2094,6 +2124,8 @@ function runAI(playerId) {
 
     if (nearestEnemy && nearestDist <= 1) {
       let atkPower = getUnitAttack(unit);
+      const flanking = getFlankingBonus(playerId, nearestEnemy.col, nearestEnemy.row);
+      atkPower += flanking;
       const tUnit = [...units, ...barbarians].find(u => u.col === nearestEnemy.col && u.row === nearestEnemy.row && u.owner !== playerId);
       const tCity = cities.find(c => c.col === nearestEnemy.col && c.row === nearestEnemy.row && c.owner !== playerId);
 
@@ -2110,20 +2142,24 @@ function runAI(playerId) {
           const isBarbTarget = tUnit.owner === 'barbarian';
           if (isBarbTarget) barbarians = barbarians.filter(b => b.id !== tUnit.id);
           else units = units.filter(u => u.id !== tUnit.id);
-          if (tUnit.owner === currentPlayer) showToast(`💀 ${STATES[playerId].name} killed your ${defDef.name}!`);
-          if (uDef.melee) {
+          if (tUnit.owner === currentPlayer) showToast(`${STATES[playerId].name} killed your ${defDef.name}!`);
+          if (uDef.melee && !tCity) {
             unit.col = nearestEnemy.col; unit.row = nearestEnemy.row;
             mapData[nearestEnemy.row][nearestEnemy.col].owner = playerId;
           }
         }
         if (unit.hp <= 0) { units = units.filter(u => u.id !== unit.id); continue; }
       }
-      if (tCity) {
+      if (tCity && !tUnit) {
         let atkStr = atkPower;
         if (uDef.siegeBonus) atkStr += uDef.siegeBonus;
+        if (!uDef.siegeBonus) {
+          if (unit.type === 'militia') atkStr = Math.floor(atkStr * 0.3);
+          else atkStr = Math.floor(atkStr * 0.5);
+        }
         const damage = Math.max(1, atkStr - Math.floor(tCity.defense / 3));
         tCity.hp -= damage;
-        if (tCity.owner === currentPlayer) showToast(`⚠️ ${STATES[playerId].name} attacks ${tCity.name}!`);
+        if (tCity.owner === currentPlayer) showToast(`${STATES[playerId].name} attacks ${tCity.name}!`);
         if (tCity.hp <= 0) {
           captureCity(tCity, playerId);
           if (uDef.melee) { unit.col = nearestEnemy.col; unit.row = nearestEnemy.row; }
@@ -2179,7 +2215,18 @@ function runAI(playerId) {
   }
 
   for (const city of myCities) {
-    if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
+    if (isCityEncircled(city)) {
+      city.hp = Math.max(0, city.hp - 2);
+      if (city.hp <= 0) {
+        const besieger = [...units, ...barbarians].find(u => {
+          const ns = getHexNeighbors(city.col, city.row);
+          return ns.some(n => n.col === u.col && n.row === u.row) && u.owner !== city.owner;
+        });
+        if (besieger) captureCity(city, besieger.owner);
+      }
+    } else {
+      if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
+    }
     if (p.food >= city.population * 2 && city.population < 10) {
       city.population++; city.maxHp += 2; city.hp += 2;
     }
@@ -2212,7 +2259,19 @@ function endTurn() {
   }
 
   for (const city of cities.filter(c => c.owner === currentPlayer)) {
-    if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
+    if (isCityEncircled(city)) {
+      city.hp = Math.max(0, city.hp - 2);
+      showToast(`${city.name} is under siege! -2 HP`);
+      if (city.hp <= 0) {
+        const besieger = [...units, ...barbarians].find(u => {
+          const ns = getHexNeighbors(city.col, city.row);
+          return ns.some(n => n.col === u.col && n.row === u.row) && u.owner !== city.owner;
+        });
+        if (besieger) captureCity(city, besieger.owner);
+      }
+    } else {
+      if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
+    }
     if (p.food >= city.population * 2 && city.population < 10) {
       city.population++; city.maxHp += 2; city.hp += 2;
     }
