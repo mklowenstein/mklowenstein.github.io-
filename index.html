@@ -1866,7 +1866,7 @@ function trainUnit(cityId, unitType) {
     type: unitType, owner: currentPlayer,
     col: city.col, row: city.row,
     hp: u.hp, maxHp: u.hp,
-    moved: true, attacked: true
+    moved: true, attacked: false
   });
   showToast(`${u.icon} ${u.name} trained!`);
   updateResourceDisplay(); updateRightPanel(); render();
