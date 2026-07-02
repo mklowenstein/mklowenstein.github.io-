@@ -579,6 +579,7 @@ const TECHS = {
   crossbow:      { name: 'Crossbow',         cost: 18, prereq: ['archery','bronze_working'],desc: 'Unlock Crossbowmen',                        icon: '🎯', effect: { unlock: 'crossbowman' } },
   horsemanship:  { name: 'Horsemanship',     cost: 15, prereq: [],                          desc: 'Unlock Cavalry',                            icon: '🐎', effect: { unlock: 'cavalry' } },
   writing:       { name: 'Writing',          cost: 12, prereq: [],                          desc: '+2 culture per city, unlock Academy',        icon: '📜', effect: { culturePerCity: 2, unlockBuilding: 'academy' } },
+  road_building: { name: 'Road Building',     cost: 10, prereq: [],                          desc: 'Build roads. Roads cut move cost to 1 and boost trade.', icon: '🛤️', effect: { unlockRoads: true } },
   currency:      { name: 'Currency',         cost: 14, prereq: ['writing'],                 desc: '+3 gold per city, unlock Market',            icon: '🪙', effect: { goldPerCity: 3, unlockBuilding: 'market' } },
   fortification: { name: 'Fortification',    cost: 16, prereq: ['bronze_working'],          desc: 'Cities +4 defense, unlock Walls',            icon: '🏰', effect: { cityDefense: 4, unlockBuilding: 'walls' } },
   philosophy:    { name: 'Philosophy',       cost: 20, prereq: ['writing'],                 desc: '+3 culture per city',                        icon: '🧘', effect: { culturePerCity: 3 } },
@@ -712,7 +713,7 @@ function generateMap() {
         }
       }
 
-      mapData[row][col] = { col, row, terrain, owner: null };
+      mapData[row][col] = { col, row, terrain, owner: null, road: false };
     }
   }
 
@@ -886,6 +887,14 @@ function getIncome(playerId) {
   iron += terrIncome.iron;
   culture += terrIncome.culture;
 
+  let roadCount = 0;
+  for (let r = 0; r < MAP_H; r++) {
+    for (let c = 0; c < MAP_W; c++) {
+      if (mapData[r][c].owner === playerId && mapData[r][c].road) roadCount++;
+    }
+  }
+  gold += Math.floor(roadCount / 3);
+
   for (const techId of p.techs) {
     const tech = TECHS[techId];
     if (tech.effect.foodPerCity) food += tech.effect.foodPerCity * playerCities.length;
@@ -977,11 +986,73 @@ function getOwnerColor(ownerId) {
   return STATES[ownerId]?.lightColor || '#888';
 }
 
+function drawMountain(cx, cy) {
+  ctx.fillStyle = '#888';
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy + 8);
+  ctx.lineTo(cx - 3, cy - 10);
+  ctx.lineTo(cx + 6, cy + 8);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx - 2, cy + 8);
+  ctx.lineTo(cx + 7, cy - 6);
+  ctx.lineTo(cx + 14, cy + 8);
+  ctx.fill();
+  // Snow caps
+  ctx.fillStyle = '#ddd';
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, cy - 5);
+  ctx.lineTo(cx - 3, cy - 10);
+  ctx.lineTo(cx, cy - 5);
+  ctx.fill();
+}
+
+function drawHills(cx, cy) {
+  ctx.fillStyle = '#9a8b6e';
+  ctx.beginPath();
+  ctx.arc(cx - 7, cy + 4, 10, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + 7, cy + 6, 8, Math.PI, 0);
+  ctx.fill();
+}
+
+function drawTrees(cx, cy) {
+  const drawTree = (x, y, s) => {
+    ctx.fillStyle = '#1a4a1a';
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 10);
+    ctx.lineTo(x - s * 5, y);
+    ctx.lineTo(x + s * 5, y);
+    ctx.fill();
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(x - 1, y, 2, s * 4);
+  };
+  drawTree(cx - 6, cy + 2, 0.8);
+  drawTree(cx + 6, cy + 4, 0.7);
+  drawTree(cx, cy - 2, 0.9);
+}
+
+function drawDesert(cx, cy) {
+  ctx.strokeStyle = '#a09060';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy + 2);
+  ctx.quadraticCurveTo(cx - 6, cy - 3, cx, cy + 2);
+  ctx.quadraticCurveTo(cx + 6, cy + 7, cx + 12, cy + 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy + 7);
+  ctx.quadraticCurveTo(cx - 2, cy + 3, cx + 4, cy + 7);
+  ctx.stroke();
+}
+
 function render() {
   if (!gameStarted) return;
   resizeCanvas();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Pass 1: Draw hex tiles with terrain icons
   for (let row = 0; row < MAP_H; row++) {
     for (let col = 0; col < MAP_W; col++) {
       const tile = mapData[row][col];
@@ -1011,6 +1082,119 @@ function render() {
         drawHex(sx, sy, HEX_SIZE - 3, tile.owner === 'barbarian' ? '#aa0000' : STATES[tile.owner].color, null);
         ctx.fill();
         ctx.globalAlpha = 1.0;
+      }
+
+      // Terrain icons
+      ctx.globalAlpha = 0.5;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      switch (tile.terrain) {
+        case 'mountain':
+          drawMountain(sx, sy);
+          break;
+        case 'hills':
+          drawHills(sx, sy);
+          break;
+        case 'forest':
+          drawTrees(sx, sy);
+          break;
+        case 'lake':
+          ctx.font = '18px sans-serif';
+          ctx.fillText('〰️', sx, sy);
+          break;
+        case 'desert':
+          drawDesert(sx, sy);
+          break;
+      }
+      ctx.globalAlpha = 1.0;
+    }
+  }
+
+  // Pass 2: Draw river connections
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#4aa3df';
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.6;
+  for (let row = 0; row < MAP_H; row++) {
+    for (let col = 0; col < MAP_W; col++) {
+      const tile = mapData[row][col];
+      if (tile.terrain !== 'river') continue;
+      const { x, y } = hexToPixel(col, row);
+      const sx = x - cameraX, sy = y - cameraY;
+      if (sx < -80 || sx > canvas.width + 80 || sy < -80 || sy > canvas.height + 80) continue;
+
+      // Draw wave pattern on river hex
+      ctx.strokeStyle = '#6bbfed';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sx - 10, sy - 2);
+      ctx.quadraticCurveTo(sx - 5, sy - 6, sx, sy - 2);
+      ctx.quadraticCurveTo(sx + 5, sy + 2, sx + 10, sy - 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx - 8, sy + 5);
+      ctx.quadraticCurveTo(sx - 3, sy + 1, sx + 2, sy + 5);
+      ctx.quadraticCurveTo(sx + 7, sy + 9, sx + 12, sy + 5);
+      ctx.stroke();
+
+      // Connect to adjacent rivers
+      ctx.strokeStyle = '#4aa3df';
+      ctx.lineWidth = 5;
+      const neighbors = getHexNeighbors(col, row);
+      for (const n of neighbors) {
+        const nTile = mapData[n.row]?.[n.col];
+        if (nTile && (nTile.terrain === 'river' || nTile.terrain === 'lake')) {
+          if (n.col > col || (n.col === col && n.row > row)) {
+            const { x: nx, y: ny } = hexToPixel(n.col, n.row);
+            const nsx = nx - cameraX, nsy = ny - cameraY;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(nsx, nsy);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Pass 3: Draw roads
+  ctx.lineCap = 'round';
+  for (let row = 0; row < MAP_H; row++) {
+    for (let col = 0; col < MAP_W; col++) {
+      const tile = mapData[row][col];
+      if (!tile.road) continue;
+      const { x, y } = hexToPixel(col, row);
+      const sx = x - cameraX, sy = y - cameraY;
+      if (sx < -80 || sx > canvas.width + 80 || sy < -80 || sy > canvas.height + 80) continue;
+
+      // Road dot on hex
+      ctx.beginPath();
+      ctx.arc(sx, sy + 12, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#c8a96e';
+      ctx.fill();
+
+      // Connect to adjacent roads/cities
+      const neighbors = getHexNeighbors(col, row);
+      for (const n of neighbors) {
+        const nTile = mapData[n.row]?.[n.col];
+        const hasCity = cities.some(c => c.col === n.col && c.row === n.row);
+        if (nTile && (nTile.road || hasCity)) {
+          if (n.col > col || (n.col === col && n.row > row)) {
+            const { x: nx, y: ny } = hexToPixel(n.col, n.row);
+            const nsx = nx - cameraX, nsy = ny - cameraY;
+            ctx.strokeStyle = '#c8a96e';
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.7;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(nsx, nsy);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 1.0;
+          }
+        }
       }
     }
   }
@@ -1182,7 +1366,8 @@ function calculateMoveAndAttack(unit) {
         const tile = mapData[n.row][n.col];
         const terrain = TERRAIN[tile.terrain];
         if (terrain.moveCost >= 99) continue;
-        const moveCost = curr.cost + terrain.moveCost;
+        const tileCost = tile.road ? 1 : terrain.moveCost;
+        const moveCost = curr.cost + tileCost;
         if (moveCost > uDef.move) continue;
         if (visited.has(key) && visited.get(key) <= moveCost) continue;
         visited.set(key, moveCost);
@@ -1580,10 +1765,22 @@ function renderTilePanel(panel, hex) {
   html += `<div class="info-row"><span class="label">Iron yield</span><span>⚔️ ${t.iron}</span></div>`;
   html += `<div class="info-row"><span class="label">Culture yield</span><span>📜 ${t.culture}</span></div>`;
   html += `<div class="info-row"><span class="label">Defense</span><span>🛡️ ${t.defense >= 0 ? '+' : ''}${t.defense}</span></div>`;
-  html += `<div class="info-row"><span class="label">Move cost</span><span>${t.moveCost >= 99 ? 'Impassable' : t.moveCost}</span></div>`;
+  html += `<div class="info-row"><span class="label">Move cost</span><span>${t.moveCost >= 99 ? 'Impassable' : (tile.road ? '1 (road)' : t.moveCost)}</span></div>`;
+  if (tile.road) html += `<div class="info-row"><span class="label">Improvement</span><span>🛤️ Road</span></div>`;
   if (tile.owner) {
     const ownerName = tile.owner === 'barbarian' ? '🗡️ Barbarian' : STATES[tile.owner].name;
     html += `<div class="info-row"><span class="label">Owner</span><span>${ownerName}</span></div>`;
+  }
+
+  if (tile.owner === currentPlayer && !tile.road && t.moveCost < 99 && players[currentPlayer].techs.has('road_building')) {
+    const canBuild = players[currentPlayer].gold >= 3;
+    html += `<button class="action-btn" ${canBuild ? '' : 'disabled'} onclick="buildRoad(${hex.col},${hex.row})" style="margin-top:8px">
+      🛤️ Build Road <span class="cost">💰3</span>
+      <span class="tooltip-text"><strong>Road</strong><br>Reduces movement cost to 1. Every 3 roads you own grant +1 gold per turn from trade.<br><strong>Cost:</strong> 💰3</span>
+    </button>`;
+    if (!canBuild) html += `<div style="font-size:0.65rem;color:var(--red);margin:-2px 0 4px 8px;">Not enough gold</div>`;
+  } else if (tile.owner === currentPlayer && !tile.road && t.moveCost < 99 && !players[currentPlayer].techs.has('road_building')) {
+    html += `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:8px;">Research Road Building to build roads here.</div>`;
   }
 
   const allUnits = [...units, ...barbarians];
@@ -1637,6 +1834,17 @@ function disbandUnit(unitId) {
   selectedUnit = null; moveHighlights = []; attackHighlights = [];
   showToast('Unit disbanded.');
   updateRightPanel(); render();
+}
+
+function buildRoad(col, row) {
+  const p = players[currentPlayer];
+  if (p.gold < 3) return;
+  const tile = mapData[row][col];
+  if (tile.road || tile.owner !== currentPlayer) return;
+  p.gold -= 3;
+  tile.road = true;
+  showToast('🛤️ Road built!');
+  updateResourceDisplay(); updateRightPanel(); render();
 }
 
 // ============================================================
@@ -1825,6 +2033,22 @@ function runAI(playerId) {
           moved: false, attacked: false
         });
       }
+    }
+  }
+
+  // AI roads: build roads between cities
+  if (p.techs.has('road_building') && p.gold >= 3) {
+    for (const city of myCities) {
+      const neighbors = getHexNeighbors(city.col, city.row);
+      for (const n of neighbors) {
+        const tile = mapData[n.row][n.col];
+        if (tile.owner === playerId && !tile.road && TERRAIN[tile.terrain].moveCost < 99 && p.gold >= 3) {
+          tile.road = true;
+          p.gold -= 3;
+          if (p.gold < 3) break;
+        }
+      }
+      if (p.gold < 3) break;
     }
   }
 
