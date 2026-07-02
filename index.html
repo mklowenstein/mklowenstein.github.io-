@@ -7,11 +7,6 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-@font-face {
-  font-family: 'GameFont';
-  src: local('Georgia'), local('Times New Roman');
-}
-
 :root {
   --bg: #1a1a2e;
   --panel: #16213e;
@@ -40,6 +35,8 @@ body {
   align-items: center; justify-content: center;
   background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 40%, #16213e 100%);
   z-index: 1000;
+  overflow-y: auto;
+  padding: 40px 20px;
 }
 
 #title-screen h1 {
@@ -61,7 +58,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  max-width: 800px;
+  max-width: 900px;
   margin-bottom: 2em;
 }
 
@@ -69,12 +66,12 @@ body {
   background: var(--panel);
   border: 2px solid var(--panel-border);
   color: var(--text);
-  padding: 16px 12px;
+  padding: 14px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
-  min-width: 170px;
+  min-width: 150px;
 }
 
 .state-btn:hover {
@@ -83,32 +80,13 @@ body {
   box-shadow: 0 4px 20px rgba(226,184,74,0.2);
 }
 
-.state-btn .name {
-  font-size: 1.3rem;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.state-btn .hanzi {
-  font-size: 1.8rem;
-  display: block;
-  margin-bottom: 6px;
-  opacity: 0.8;
-}
-
-.state-btn .bonus {
-  font-size: 0.75rem;
-  color: var(--gold);
-  display: block;
-}
-
-.state-btn .desc {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  display: block;
-  margin-top: 4px;
-}
+.state-btn .name { font-size: 1.1rem; font-weight: bold; display: block; margin-bottom: 2px; }
+.state-btn .hanzi { font-size: 1.6rem; display: block; margin-bottom: 4px; opacity: 0.8; }
+.state-btn .bonus { font-size: 0.7rem; color: var(--gold); display: block; }
+.state-btn .desc { font-size: 0.65rem; color: var(--text-dim); display: block; margin-top: 3px; }
+.state-btn.minor { border-color: #333; }
+.state-btn.minor .name { font-size: 0.95rem; }
+.section-label { grid-column: 1 / -1; color: var(--text-dim); font-size: 0.85rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 0 0 0; border-top: 1px solid var(--panel-border); text-align: center; }
 
 #game-container {
   display: none;
@@ -149,10 +127,7 @@ body {
   gap: 16px;
 }
 
-#turn-info .turn-num {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-}
+#turn-info .turn-num { color: var(--text-dim); font-size: 0.85rem; }
 
 #end-turn-btn {
   background: var(--gold);
@@ -219,6 +194,7 @@ canvas#map:active { cursor: grabbing; }
   margin: 4px 0;
   text-align: left;
   transition: all 0.15s;
+  position: relative;
 }
 
 .action-btn:hover:not(:disabled) {
@@ -235,6 +211,27 @@ canvas#map:active { cursor: grabbing; }
   float: right;
   color: var(--gold);
   font-size: 0.75rem;
+}
+
+.action-btn .tooltip-text {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #0a0a1a;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: var(--text);
+  z-index: 50;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.action-btn:hover .tooltip-text {
+  display: block;
 }
 
 #bottom-bar {
@@ -271,7 +268,6 @@ canvas#map:active { cursor: grabbing; }
   flex: 1;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.7);
@@ -326,48 +322,15 @@ canvas#map:active { cursor: grabbing; }
   transition: all 0.15s;
 }
 
-.tech-card:hover:not(.researched):not(.locked) {
-  border-color: var(--gold);
-}
+.tech-card:hover:not(.researched):not(.locked) { border-color: var(--gold); }
+.tech-card.researched { border-color: var(--green); opacity: 0.7; }
+.tech-card.locked { opacity: 0.35; cursor: not-allowed; }
+.tech-card.available { border-color: var(--blue); }
+.tech-card .tech-name { font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; }
+.tech-card .tech-cost { color: var(--gold); font-size: 0.75rem; }
+.tech-card .tech-desc { color: var(--text-dim); font-size: 0.7rem; margin-top: 4px; }
+.tech-card .tech-prereq { color: var(--red); font-size: 0.65rem; margin-top: 2px; }
 
-.tech-card.researched {
-  border-color: var(--green);
-  opacity: 0.7;
-}
-
-.tech-card.locked {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.tech-card.available {
-  border-color: var(--blue);
-}
-
-.tech-card .tech-name {
-  font-weight: bold;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
-}
-
-.tech-card .tech-cost {
-  color: var(--gold);
-  font-size: 0.75rem;
-}
-
-.tech-card .tech-desc {
-  color: var(--text-dim);
-  font-size: 0.7rem;
-  margin-top: 4px;
-}
-
-.tech-card .tech-prereq {
-  color: var(--red);
-  font-size: 0.65rem;
-  margin-top: 2px;
-}
-
-/* Diplomacy */
 .diplo-row {
   display: flex;
   align-items: center;
@@ -378,20 +341,9 @@ canvas#map:active { cursor: grabbing; }
   gap: 12px;
 }
 
-.diplo-row .state-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
-
+.diplo-row .state-color { width: 16px; height: 16px; border-radius: 50%; }
 .diplo-row .state-name { flex: 1; font-size: 0.9rem; }
-
-.diplo-row .relation {
-  font-size: 0.8rem;
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
+.diplo-row .relation { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; }
 .relation.war { background: var(--red); color: white; }
 .relation.peace { background: #555; color: var(--text); }
 .relation.alliance { background: var(--green); color: white; }
@@ -408,7 +360,6 @@ canvas#map:active { cursor: grabbing; }
 
 .diplo-action:hover { border-color: var(--gold); }
 
-/* Notification toast */
 .toast {
   position: fixed;
   top: 60px;
@@ -430,7 +381,6 @@ canvas#map:active { cursor: grabbing; }
   transform: translateX(-50%) translateY(0);
 }
 
-/* Victory screen */
 #victory-screen {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.85);
@@ -442,31 +392,13 @@ canvas#map:active { cursor: grabbing; }
 }
 
 #victory-screen.active { display: flex; }
-
-#victory-screen h1 {
-  font-size: 3rem;
-  color: var(--gold);
-  margin-bottom: 0.5em;
-}
-
-#victory-screen p {
-  font-size: 1.2rem;
-  color: var(--text-dim);
-  margin-bottom: 2em;
-}
-
+#victory-screen h1 { font-size: 3rem; color: var(--gold); margin-bottom: 0.5em; }
+#victory-screen p { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 2em; text-align: center; max-width: 500px; }
 #victory-screen button {
-  background: var(--gold);
-  color: #1a1a2e;
-  border: none;
-  padding: 12px 32px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
+  background: var(--gold); color: #1a1a2e; border: none;
+  padding: 12px 32px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
 }
 
-/* Minimap */
 #minimap {
   position: absolute;
   bottom: 72px;
@@ -478,32 +410,6 @@ canvas#map:active { cursor: grabbing; }
   cursor: pointer;
 }
 
-/* Tab buttons */
-.tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.tab-btn {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--panel-border);
-  color: var(--text-dim);
-  padding: 6px 12px;
-  border-radius: 6px 6px 0 0;
-  cursor: pointer;
-  font-size: 0.8rem;
-  flex: 1;
-  text-align: center;
-}
-
-.tab-btn.active {
-  background: var(--panel-border);
-  color: var(--gold);
-  border-color: var(--gold);
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
@@ -515,7 +421,7 @@ canvas#map:active { cursor: grabbing; }
   <h1>戰國策</h1>
   <div class="subtitle">THE WARRING STATES</div>
   <p style="color: var(--text-dim); margin-bottom: 1.5em; max-width: 500px; text-align: center; line-height: 1.6; font-size: 0.9rem;">
-    China, 475 BC. Seven kingdoms vie for supremacy.
+    China, 475 BC. Seven great kingdoms and five lesser states vie for supremacy.
     Build your cities, research ancient arts, forge alliances — or conquer all under heaven.
   </p>
   <div class="state-select" id="state-select"></div>
@@ -582,192 +488,151 @@ canvas#map:active { cursor: grabbing; }
 const STATES = {
   qin: {
     name: 'Qin', hanzi: '秦', color: '#1a1a1a', lightColor: '#4a4a4a',
-    textColor: '#e0e0e0',
     bonus: 'Legalist Reform: Units cost 20% less iron',
     desc: 'Ruthless Legalist reformers. Shang Yang\'s laws forged an iron war machine.',
-    combatBonus: 0, ironDiscount: 0.2, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0, cavalryBonus: 0, rangedBonus: 0, defenseBonus: 0,
-    startTech: null
+    ironDiscount: 0.2, major: true
   },
   chu: {
     name: 'Chu', hanzi: '楚', color: '#8B0000', lightColor: '#c44',
-    textColor: '#ffcccc',
-    bonus: 'Kingdom of Poetry: +2 culture per turn',
+    bonus: 'Kingdom of Poetry: +3 culture per turn',
     desc: 'Vast southern kingdom. Home of Qu Yuan and the Songs of Chu.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 2,
-    techDiscount: 0, cavalryBonus: 0, rangedBonus: 0, defenseBonus: 0,
-    startTech: null
+    cultureBonus: 3, major: true
   },
   qi: {
     name: 'Qi', hanzi: '齊', color: '#1a6b1a', lightColor: '#2a9d2a',
-    textColor: '#ccffcc',
     bonus: 'Jixia Academy: Tech costs 25% less culture',
     desc: 'Wealthy traders and scholars. The Jixia Academy drew China\'s greatest minds.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0.25, cavalryBonus: 0, rangedBonus: 0, defenseBonus: 0,
-    startTech: null
+    techDiscount: 0.25, major: true
   },
   zhao: {
     name: 'Zhao', hanzi: '趙', color: '#8B4513', lightColor: '#b5651d',
-    textColor: '#ffe0c0',
     bonus: 'Hufu Riding: Cavalry +2 attack',
     desc: 'King Wuling adopted nomadic cavalry tactics, revolutionizing warfare.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0, cavalryBonus: 2, rangedBonus: 0, defenseBonus: 0,
-    startTech: null
+    cavalryBonus: 2, major: true
   },
   wei: {
     name: 'Wei', hanzi: '魏', color: '#4B0082', lightColor: '#7B3FA0',
-    textColor: '#e0ccff',
     bonus: 'Early Innovator: Start with Agriculture',
     desc: 'First to modernize. Wei\'s elite soldiers once dominated the central plains.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0, cavalryBonus: 0, rangedBonus: 0, defenseBonus: 0,
-    startTech: 'agriculture'
+    startTech: 'agriculture', major: true
   },
   han: {
     name: 'Han', hanzi: '韓', color: '#006064', lightColor: '#00838f',
-    textColor: '#ccffff',
     bonus: 'Master Smiths: Crossbows +2 attack',
-    desc: 'Smallest state, but famed for its deadly crossbows and weapon craft.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0, cavalryBonus: 0, rangedBonus: 2, defenseBonus: 0,
-    startTech: null
+    desc: 'Smallest great state, famed for deadly crossbows and weapon craft.',
+    rangedBonus: 2, major: true
   },
   yan: {
     name: 'Yan', hanzi: '燕', color: '#37474F', lightColor: '#607D8B',
-    textColor: '#cfd8dc',
     bonus: 'Northern Fortitude: Cities +3 defense',
     desc: 'Ancient northern kingdom. Jing Ke\'s assassination attempt is legend.',
-    combatBonus: 0, ironDiscount: 0, foodBonus: 0, goldBonus: 0, cultureBonus: 0,
-    techDiscount: 0, cavalryBonus: 0, rangedBonus: 0, defenseBonus: 3,
-    startTech: null
+    defenseBonus: 3, major: true
+  },
+  zhongshan: {
+    name: 'Zhongshan', hanzi: '中山', color: '#5D4037', lightColor: '#8D6E63',
+    bonus: 'Stubborn Resilience: Units heal +2 in own territory',
+    desc: 'Non-Chinese Dí people. Landlocked but famously resilient against Zhao.',
+    healBonus: 2, major: false
+  },
+  song: {
+    name: 'Song', hanzi: '宋', color: '#BF360C', lightColor: '#E65100',
+    bonus: 'Merchant Princes: +3 gold per city',
+    desc: 'Wealthy trading hub descended from the Shang dynasty. Rich but coveted.',
+    goldPerCity: 3, major: false
+  },
+  lu: {
+    name: 'Lu', hanzi: '魯', color: '#1B5E20', lightColor: '#4CAF50',
+    bonus: 'Birthplace of Confucius: +3 culture per city',
+    desc: 'Land of rites and music. Confucius and Mencius called Lu home.',
+    culturePerCity: 3, major: false
+  },
+  yue: {
+    name: 'Yue', hanzi: '越', color: '#004D40', lightColor: '#00897B',
+    bonus: 'Sword of Goujian: Melee units +2 attack',
+    desc: 'Southern warriors who conquered Wu. Famed for unbreakable swords.',
+    meleeBonus: 2, major: false
+  },
+  bashu: {
+    name: 'Ba-Shu', hanzi: '巴蜀', color: '#827717', lightColor: '#AFB42B',
+    bonus: 'Fertile Basin: +3 food per city',
+    desc: 'Rich Sichuan kingdoms. Their fertile lands would later fuel Qin\'s conquests.',
+    foodPerCity: 3, major: false
   }
 };
 
 const TERRAIN = {
-  plains:   { name: 'Plains',   color: '#4a7c3f', food: 2, gold: 1, iron: 0, moveCost: 1, defense: 0 },
-  hills:    { name: 'Hills',    color: '#8B7355', food: 1, gold: 1, iron: 1, moveCost: 2, defense: 2 },
-  mountain: { name: 'Mountain', color: '#696969', food: 0, gold: 0, iron: 2, moveCost: 99, defense: 4 },
-  forest:   { name: 'Forest',   color: '#2d5a27', food: 1, gold: 0, iron: 0, moveCost: 2, defense: 2 },
-  river:    { name: 'River',    color: '#2980b9', food: 3, gold: 2, iron: 0, moveCost: 1, defense: -1 },
-  lake:     { name: 'Lake',     color: '#1a5276', food: 2, gold: 1, iron: 0, moveCost: 99, defense: 0 },
-  desert:   { name: 'Desert',   color: '#c2b280', food: 0, gold: 0, iron: 1, moveCost: 2, defense: -1 }
+  plains:   { name: 'Plains',   color: '#4a7c3f', food: 2, gold: 1, iron: 0, culture: 0, moveCost: 1, defense: 0, desc: 'Flat farmland. Good food yield.' },
+  hills:    { name: 'Hills',    color: '#8B7355', food: 1, gold: 1, iron: 2, culture: 0, moveCost: 2, defense: 2, desc: 'Rocky terrain. Iron deposits and defensive advantage.' },
+  mountain: { name: 'Mountain', color: '#696969', food: 0, gold: 0, iron: 3, culture: 0, moveCost: 99, defense: 4, desc: 'Impassable peaks. Rich in iron ore.' },
+  forest:   { name: 'Forest',   color: '#2d5a27', food: 2, gold: 0, iron: 0, culture: 1, moveCost: 2, defense: 2, desc: 'Dense woodland. Food and defensive cover.' },
+  river:    { name: 'River',    color: '#2980b9', food: 3, gold: 2, iron: 0, culture: 0, moveCost: 1, defense: -1, desc: 'Fertile riverlands. Excellent food and trade.' },
+  lake:     { name: 'Lake',     color: '#1a5276', food: 2, gold: 1, iron: 0, culture: 0, moveCost: 99, defense: 0, desc: 'Impassable water. Fish and trade.' },
+  desert:   { name: 'Desert',   color: '#c2b280', food: 0, gold: 1, iron: 1, culture: 0, moveCost: 2, defense: -1, desc: 'Barren wasteland. Sparse resources.' }
 };
 
 const TECHS = {
-  agriculture: {
-    name: 'Agriculture', cost: 8, prereq: [],
-    desc: '+1 food per city', icon: '🌾',
-    effect: { foodPerCity: 1 }
-  },
-  bronze_working: {
-    name: 'Bronze Working', cost: 10, prereq: [],
-    desc: 'Unlock Spearmen', icon: '🔨',
-    effect: { unlock: 'spearman' }
-  },
-  archery: {
-    name: 'Archery', cost: 10, prereq: [],
-    desc: 'Unlock Archers', icon: '🏹',
-    effect: { unlock: 'archer' }
-  },
-  irrigation: {
-    name: 'Irrigation', cost: 15, prereq: ['agriculture'],
-    desc: '+2 food per city, unlock Granary', icon: '💧',
-    effect: { foodPerCity: 2, unlockBuilding: 'granary' }
-  },
-  iron_working: {
-    name: 'Iron Working', cost: 18, prereq: ['bronze_working'],
-    desc: 'Unlock Swordsmen, +1 iron per city', icon: '⚔️',
-    effect: { unlock: 'swordsman', ironPerCity: 1 }
-  },
-  crossbow: {
-    name: 'Crossbow', cost: 18, prereq: ['archery', 'bronze_working'],
-    desc: 'Unlock Crossbowmen', icon: '🎯',
-    effect: { unlock: 'crossbowman' }
-  },
-  horsemanship: {
-    name: 'Horsemanship', cost: 15, prereq: [],
-    desc: 'Unlock Cavalry', icon: '🐎',
-    effect: { unlock: 'cavalry' }
-  },
-  writing: {
-    name: 'Writing', cost: 12, prereq: [],
-    desc: '+2 culture per city, unlock Academy', icon: '📜',
-    effect: { culturePerCity: 2, unlockBuilding: 'academy' }
-  },
-  currency: {
-    name: 'Currency', cost: 14, prereq: ['writing'],
-    desc: '+3 gold per city, unlock Market', icon: '🪙',
-    effect: { goldPerCity: 3, unlockBuilding: 'market' }
-  },
-  fortification: {
-    name: 'Fortification', cost: 16, prereq: ['bronze_working'],
-    desc: 'Cities +4 defense, unlock Walls', icon: '🏰',
-    effect: { cityDefense: 4, unlockBuilding: 'walls' }
-  },
-  philosophy: {
-    name: 'Philosophy', cost: 20, prereq: ['writing'],
-    desc: '+3 culture per city. Unlock cultural victory track.', icon: '🧘',
-    effect: { culturePerCity: 3 }
-  },
-  strategy: {
-    name: 'Art of War', cost: 22, prereq: ['iron_working', 'horsemanship'],
-    desc: 'All units +1 attack', icon: '📖',
-    effect: { globalAttack: 1 }
-  },
-  siege_craft: {
-    name: 'Siege Craft', cost: 20, prereq: ['iron_working'],
-    desc: 'Unlock Siege Tower', icon: '🏗️',
-    effect: { unlock: 'siege_tower' }
-  },
-  mandate: {
-    name: 'Mandate of Heaven', cost: 30, prereq: ['philosophy', 'strategy'],
-    desc: 'Unlocks Unification Victory', icon: '👑',
-    effect: { victoryUnlock: true }
-  }
+  agriculture:   { name: 'Agriculture',     cost: 8,  prereq: [],                          desc: '+1 food per city',                          icon: '🌾', effect: { foodPerCity: 1 } },
+  bronze_working:{ name: 'Bronze Working',   cost: 10, prereq: [],                          desc: 'Unlock Spearmen',                           icon: '🔨', effect: { unlock: 'spearman' } },
+  archery:       { name: 'Archery',          cost: 10, prereq: [],                          desc: 'Unlock Archers',                            icon: '🏹', effect: { unlock: 'archer' } },
+  irrigation:    { name: 'Irrigation',       cost: 15, prereq: ['agriculture'],             desc: '+2 food per city, unlock Granary',           icon: '💧', effect: { foodPerCity: 2, unlockBuilding: 'granary' } },
+  iron_working:  { name: 'Iron Working',     cost: 18, prereq: ['bronze_working'],          desc: 'Unlock Swordsmen, +1 iron per city',        icon: '⚔️', effect: { unlock: 'swordsman', ironPerCity: 1 } },
+  crossbow:      { name: 'Crossbow',         cost: 18, prereq: ['archery','bronze_working'],desc: 'Unlock Crossbowmen',                        icon: '🎯', effect: { unlock: 'crossbowman' } },
+  horsemanship:  { name: 'Horsemanship',     cost: 15, prereq: [],                          desc: 'Unlock Cavalry',                            icon: '🐎', effect: { unlock: 'cavalry' } },
+  writing:       { name: 'Writing',          cost: 12, prereq: [],                          desc: '+2 culture per city, unlock Academy',        icon: '📜', effect: { culturePerCity: 2, unlockBuilding: 'academy' } },
+  currency:      { name: 'Currency',         cost: 14, prereq: ['writing'],                 desc: '+3 gold per city, unlock Market',            icon: '🪙', effect: { goldPerCity: 3, unlockBuilding: 'market' } },
+  fortification: { name: 'Fortification',    cost: 16, prereq: ['bronze_working'],          desc: 'Cities +4 defense, unlock Walls',            icon: '🏰', effect: { cityDefense: 4, unlockBuilding: 'walls' } },
+  philosophy:    { name: 'Philosophy',       cost: 20, prereq: ['writing'],                 desc: '+3 culture per city',                        icon: '🧘', effect: { culturePerCity: 3 } },
+  strategy:      { name: 'Art of War',       cost: 22, prereq: ['iron_working','horsemanship'], desc: 'All units +1 attack',                    icon: '📖', effect: { globalAttack: 1 } },
+  siege_craft:   { name: 'Siege Craft',      cost: 20, prereq: ['iron_working'],            desc: 'Unlock Siege Tower',                        icon: '🏗️', effect: { unlock: 'siege_tower' } },
+  mandate:       { name: 'Mandate of Heaven',cost: 30, prereq: ['philosophy','strategy'],   desc: 'Unlocks Unification Victory',               icon: '👑', effect: { victoryUnlock: true } }
 };
 
 const UNITS = {
-  militia:     { name: 'Militia',     attack: 2, defense: 1, hp: 8,  move: 2, cost: { food: 3, gold: 0, iron: 0 }, icon: '👤', prereq: null },
-  spearman:    { name: 'Spearman',    attack: 3, defense: 3, hp: 10, move: 2, cost: { food: 4, gold: 2, iron: 1 }, icon: '🔱', prereq: 'bronze_working' },
+  militia:     { name: 'Militia',     attack: 2, defense: 1, hp: 8,  move: 2, cost: { food: 3, gold: 0, iron: 0 }, icon: '👤', prereq: null, melee: true },
+  spearman:    { name: 'Spearman',    attack: 3, defense: 3, hp: 10, move: 2, cost: { food: 4, gold: 2, iron: 1 }, icon: '🔱', prereq: 'bronze_working', melee: true },
   archer:      { name: 'Archer',      attack: 3, defense: 1, hp: 8,  move: 2, cost: { food: 3, gold: 2, iron: 0 }, icon: '🏹', prereq: 'archery', range: 2 },
-  swordsman:   { name: 'Swordsman',   attack: 5, defense: 3, hp: 12, move: 2, cost: { food: 4, gold: 3, iron: 3 }, icon: '⚔️', prereq: 'iron_working' },
+  swordsman:   { name: 'Swordsman',   attack: 5, defense: 3, hp: 12, move: 2, cost: { food: 4, gold: 3, iron: 3 }, icon: '⚔️', prereq: 'iron_working', melee: true },
   crossbowman: { name: 'Crossbowman', attack: 5, defense: 2, hp: 10, move: 2, cost: { food: 3, gold: 3, iron: 2 }, icon: '🎯', prereq: 'crossbow', range: 2 },
-  cavalry:     { name: 'Cavalry',     attack: 5, defense: 2, hp: 10, move: 3, cost: { food: 5, gold: 4, iron: 2 }, icon: '🐎', prereq: 'horsemanship' },
-  siege_tower: { name: 'Siege Tower', attack: 8, defense: 1, hp: 12, move: 1, cost: { food: 6, gold: 5, iron: 4 }, icon: '🏗️', prereq: 'siege_craft', siegeBonus: 5 }
+  cavalry:     { name: 'Cavalry',     attack: 5, defense: 2, hp: 10, move: 3, cost: { food: 5, gold: 4, iron: 2 }, icon: '🐎', prereq: 'horsemanship', melee: true },
+  siege_tower: { name: 'Siege Tower', attack: 8, defense: 1, hp: 12, move: 1, cost: { food: 6, gold: 5, iron: 4 }, icon: '🏗️', prereq: 'siege_craft', melee: true, siegeBonus: 5 }
 };
 
 const BUILDINGS = {
-  granary:  { name: 'Granary',  cost: { gold: 10, iron: 2 }, effect: { food: 3 }, prereq: 'irrigation', icon: '🏠' },
-  market:   { name: 'Market',   cost: { gold: 8, iron: 0 },  effect: { gold: 4 }, prereq: 'currency', icon: '🏪' },
-  academy:  { name: 'Academy',  cost: { gold: 12, iron: 0 }, effect: { culture: 3 }, prereq: 'writing', icon: '🏛️' },
-  walls:    { name: 'Walls',    cost: { gold: 15, iron: 5 }, effect: { defense: 5 }, prereq: 'fortification', icon: '🧱' },
-  barracks: { name: 'Barracks', cost: { gold: 10, iron: 3 }, effect: { unitBonus: 1 }, prereq: null, icon: '⚒️' },
-  farm:     { name: 'Farm',     cost: { gold: 5, iron: 0 },  effect: { food: 2 }, prereq: null, icon: '🌾' }
+  farm:     { name: 'Farm',     cost: { gold: 5, iron: 0 },  effect: { food: 2 },    prereq: null,            icon: '🌾', desc: 'Cultivated fields surrounding the city. Produces +2 food per turn.' },
+  granary:  { name: 'Granary',  cost: { gold: 10, iron: 2 }, effect: { food: 3 },    prereq: 'irrigation',    icon: '🏠', desc: 'Stores surplus grain to feed the population. Produces +3 food per turn.' },
+  market:   { name: 'Market',   cost: { gold: 8, iron: 0 },  effect: { gold: 4 },    prereq: 'currency',      icon: '🏪', desc: 'A bustling trade center. Produces +4 gold per turn.' },
+  academy:  { name: 'Academy',  cost: { gold: 12, iron: 0 }, effect: { culture: 3 }, prereq: 'writing',       icon: '🏛️', desc: 'A hall of learning for scholars. Produces +3 culture per turn.' },
+  walls:    { name: 'Walls',    cost: { gold: 15, iron: 5 }, effect: { defense: 5 }, prereq: 'fortification', icon: '🧱', desc: 'Stone fortifications around the city. Adds +5 city defense.' },
+  barracks: { name: 'Barracks', cost: { gold: 10, iron: 3 }, effect: { unitBonus: 1 },prereq: null,           icon: '⚒️', desc: 'Military training grounds. All units trained here get +1 attack and defense.' }
 };
 
 // ============================================================
-// MAP GENERATION
+// MAP
 // ============================================================
 
-const MAP_W = 22, MAP_H = 16;
+const MAP_W = 24, MAP_H = 18;
 const HEX_SIZE = 36;
 
 const STATE_POSITIONS = {
-  yan:  { col: 14, row: 1 },
-  zhao: { col: 11, row: 3 },
-  qi:   { col: 17, row: 5 },
-  wei:  { col: 11, row: 7 },
-  han:  { col: 9,  row: 9 },
-  qin:  { col: 4,  row: 6 },
-  chu:  { col: 13, row: 12 }
+  yan:        { col: 15, row: 1 },
+  zhao:       { col: 12, row: 3 },
+  qi:         { col: 19, row: 5 },
+  wei:        { col: 12, row: 7 },
+  han:        { col: 10, row: 9 },
+  qin:        { col: 4,  row: 6 },
+  chu:        { col: 14, row: 13 },
+  zhongshan:  { col: 14, row: 2 },
+  song:       { col: 16, row: 9 },
+  lu:         { col: 19, row: 7 },
+  yue:        { col: 19, row: 14 },
+  bashu:      { col: 3,  row: 11 }
 };
 
 let mapData = [];
 let cities = [];
 let units = [];
 let players = {};
+let barbarians = [];
 let currentPlayer = null;
 let turn = 1;
 let selectedUnit = null;
@@ -792,14 +657,14 @@ function generateMap() {
   mapData = [];
 
   const mountainRidges = [
-    {startCol: 1, startRow: 4, endCol: 6, endRow: 2},
-    {startCol: 7, startRow: 5, endCol: 9, endRow: 8},
-    {startCol: 2, startRow: 10, endCol: 5, endRow: 14},
+    {cx: 3.5, cy: 3, r: 2.5},
+    {cx: 8, cy: 6.5, r: 2},
+    {cx: 3.5, cy: 12, r: 2.5},
   ];
 
-  const rivers = [
-    {points: [{c:1,r:7},{c:3,r:8},{c:5,r:9},{c:7,r:10},{c:9,r:11},{c:11,r:11},{c:13,r:10},{c:15,r:9},{c:17,r:8},{c:19,r:8},{c:21,r:7}]},
-    {points: [{c:8,r:1},{c:9,r:3},{c:10,r:5},{c:11,r:7},{c:12,r:9}]},
+  const riverPoints = [
+    [{c:1,r:7},{c:3,r:8},{c:5,r:9},{c:7,r:10},{c:9,r:11},{c:11,r:11},{c:13,r:10},{c:15,r:9},{c:17,r:9},{c:19,r:8},{c:21,r:7},{c:23,r:7}],
+    [{c:8,r:1},{c:9,r:3},{c:10,r:5},{c:11,r:7},{c:12,r:9}],
   ];
 
   for (let row = 0; row < MAP_H; row++) {
@@ -810,63 +675,55 @@ function generateMap() {
 
       let nearMountain = false;
       for (const ridge of mountainRidges) {
-        const dx = col - (ridge.startCol + ridge.endCol) / 2;
-        const dy = row - (ridge.startRow + ridge.endRow) / 2;
-        if (Math.sqrt(dx*dx + dy*dy) < 2.5) nearMountain = true;
+        const dx = col - ridge.cx;
+        const dy = row - ridge.cy;
+        if (Math.sqrt(dx*dx + dy*dy) < ridge.r) nearMountain = true;
       }
 
-      let nearRiver = false;
-      for (const river of rivers) {
-        for (const p of river.points) {
-          if (Math.abs(col - p.c) + Math.abs(row - p.r) <= 1) nearRiver = true;
+      let isRiver = false;
+      for (const pts of riverPoints) {
+        for (const p of pts) {
+          if (col === p.c && row === p.r) isRiver = true;
         }
       }
 
-      for (const river of rivers) {
-        for (const p of river.points) {
-          if (col === p.c && row === p.r) terrain = 'river';
-        }
+      if (isRiver) {
+        terrain = 'river';
+      } else if (nearMountain && r < 0.5) {
+        terrain = 'mountain';
+      } else if (nearMountain && r < 0.8) {
+        terrain = 'hills';
+      } else if (r < 0.05) {
+        terrain = 'lake';
+      } else if (r < 0.18) {
+        terrain = 'forest';
+      } else if (r < 0.26) {
+        terrain = 'hills';
+      } else if (col < 3 && row > 9 && r < 0.4) {
+        terrain = 'desert';
       }
 
-      if (terrain === 'plains') {
-        if (nearMountain && r < 0.5) terrain = 'mountain';
-        else if (nearMountain && r < 0.8) terrain = 'hills';
-        else if (r < 0.06) terrain = 'lake';
-        else if (r < 0.2) terrain = 'forest';
-        else if (r < 0.28) terrain = 'hills';
-        else if (col < 3 && row > 8 && r < 0.4) terrain = 'desert';
-      }
-
-      let isCapital = false;
       for (const [sid, pos] of Object.entries(STATE_POSITIONS)) {
-        if (col === pos.col && row === pos.row) {
-          terrain = 'plains';
-          isCapital = sid;
-        }
-        if (Math.abs(col - pos.col) <= 1 && Math.abs(row - pos.row) <= 1 && terrain === 'mountain') {
-          terrain = 'hills';
-        }
-        if (Math.abs(col - pos.col) <= 1 && Math.abs(row - pos.row) <= 1 && terrain === 'lake') {
-          terrain = 'plains';
+        const dx = Math.abs(col - pos.col);
+        const dy = Math.abs(row - pos.row);
+        if (dx === 0 && dy === 0) terrain = 'plains';
+        if (dx <= 1 && dy <= 1 && (terrain === 'mountain' || terrain === 'lake')) {
+          terrain = r < 0.5 ? 'hills' : 'plains';
         }
       }
 
-      mapData[row][col] = {
-        col, row, terrain,
-        owner: null,
-        isCapital
-      };
+      mapData[row][col] = { col, row, terrain, owner: null };
     }
   }
 
   for (const [sid, pos] of Object.entries(STATE_POSITIONS)) {
-    for (let dr = -2; dr <= 2; dr++) {
-      for (let dc = -2; dc <= 2; dc++) {
-        const r = pos.row + dr, c = pos.col + dc;
-        if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W) {
-          const dist = Math.abs(dr) + Math.abs(dc);
-          if (dist <= 2) {
-            mapData[r][c].owner = sid;
+    const radius = STATES[sid].major ? 2 : 1;
+    for (let dr = -radius; dr <= radius; dr++) {
+      for (let dc = -radius; dc <= radius; dc++) {
+        const rr = pos.row + dr, cc = pos.col + dc;
+        if (rr >= 0 && rr < MAP_H && cc >= 0 && cc < MAP_W) {
+          if (Math.abs(dr) + Math.abs(dc) <= radius) {
+            mapData[rr][cc].owner = sid;
           }
         }
       }
@@ -881,9 +738,7 @@ function generateMap() {
 function hexToPixel(col, row) {
   const w = HEX_SIZE * 2;
   const h = Math.sqrt(3) * HEX_SIZE;
-  const x = col * w * 0.75;
-  const y = row * h + (col % 2 === 1 ? h / 2 : 0);
-  return { x, y };
+  return { x: col * w * 0.75, y: row * h + (col % 2 === 1 ? h / 2 : 0) };
 }
 
 function pixelToHex(px, py) {
@@ -891,8 +746,7 @@ function pixelToHex(px, py) {
   const h = Math.sqrt(3) * HEX_SIZE;
   const col = Math.round(px / (w * 0.75));
   const rowOffset = col % 2 === 1 ? h / 2 : 0;
-  const row = Math.round((py - rowOffset) / h);
-  return { col, row };
+  return { col, row: Math.round((py - rowOffset) / h) };
 }
 
 function getHexNeighbors(col, row) {
@@ -905,11 +759,13 @@ function getHexNeighbors(col, row) {
 }
 
 function hexDistance(c1, r1, c2, r2) {
-  const ac1 = c1, ar1 = r1 - (c1 - (c1 & 1)) / 2;
-  const az1 = -ac1 - ar1;
-  const ac2 = c2, ar2 = r2 - (c2 - (c2 & 1)) / 2;
-  const az2 = -ac2 - ar2;
-  return Math.max(Math.abs(ac1 - ac2), Math.abs(ar1 - ar2), Math.abs(az1 - az2));
+  function toAxial(c, r) {
+    const q = c;
+    const s = r - (c - (c & 1)) / 2;
+    return { q, s, t: -q - s };
+  }
+  const a = toAxial(c1, r1), b = toAxial(c2, r2);
+  return Math.max(Math.abs(a.q - b.q), Math.abs(a.s - b.s), Math.abs(a.t - b.t));
 }
 
 // ============================================================
@@ -922,15 +778,15 @@ function initPlayer(stateId) {
   const techs = new Set();
   if (state.startTech) techs.add(state.startTech);
 
+  const isMajor = state.major;
+
   players[stateId] = {
-    id: stateId,
-    state,
-    food: 15,
-    gold: 15,
-    iron: 5,
-    culture: 0,
-    techs,
-    alive: true,
+    id: stateId, state,
+    food: isMajor ? 15 : 10,
+    gold: isMajor ? 15 : 10,
+    iron: isMajor ? 5 : 3,
+    culture: isMajor ? 3 : 2,
+    techs, alive: true,
     relations: {}
   };
 
@@ -939,55 +795,70 @@ function initPlayer(stateId) {
       players[stateId].relations[otherId] = 'peace';
     }
   }
+  players[stateId].relations['barbarian'] = 'war';
 
   cities.push({
     id: `${stateId}_capital`,
     owner: stateId,
-    col: pos.col,
-    row: pos.row,
-    name: state.name + ' Capital',
+    col: pos.col, row: pos.row,
+    name: state.name + (isMajor ? ' Capital' : ''),
     isCapital: true,
-    hp: 20,
-    maxHp: 20,
+    hp: isMajor ? 20 : 15,
+    maxHp: isMajor ? 20 : 15,
     defense: 5 + (state.defenseBonus || 0),
     buildings: [],
-    population: 3
+    population: isMajor ? 3 : 2
   });
 
-  units.push({
-    id: `${stateId}_militia_1`,
-    type: 'militia',
-    owner: stateId,
-    col: pos.col + 1,
-    row: pos.row,
-    hp: UNITS.militia.hp,
-    maxHp: UNITS.militia.hp,
-    moved: false,
-    attacked: false
-  });
+  const startUnits = isMajor ? 2 : 1;
+  const offsets = [[1, 0], [-1, 0]];
+  for (let i = 0; i < startUnits; i++) {
+    const oc = pos.col + offsets[i][0];
+    const or2 = pos.row + offsets[i][1];
+    if (oc >= 0 && oc < MAP_W && or2 >= 0 && or2 < MAP_H) {
+      units.push({
+        id: `${stateId}_militia_${i}`,
+        type: 'militia', owner: stateId,
+        col: oc, row: or2,
+        hp: UNITS.militia.hp, maxHp: UNITS.militia.hp,
+        moved: false, attacked: false
+      });
+    }
+  }
+}
 
-  units.push({
-    id: `${stateId}_militia_2`,
-    type: 'militia',
-    owner: stateId,
-    col: pos.col - 1,
-    row: pos.row,
-    hp: UNITS.militia.hp,
-    maxHp: UNITS.militia.hp,
-    moved: false,
-    attacked: false
-  });
+function getTerritoryIncome(playerId) {
+  let food = 0, gold = 0, iron = 0, culture = 0;
+  for (let row = 0; row < MAP_H; row++) {
+    for (let col = 0; col < MAP_W; col++) {
+      const tile = mapData[row][col];
+      if (tile.owner === playerId) {
+        const t = TERRAIN[tile.terrain];
+        food += t.food;
+        gold += t.gold;
+        iron += t.iron;
+        culture += t.culture;
+      }
+    }
+  }
+  return {
+    food: Math.floor(food / 4),
+    gold: Math.floor(gold / 4),
+    iron: Math.floor(iron / 4),
+    culture: Math.floor(culture / 5)
+  };
 }
 
 function getIncome(playerId) {
   const p = players[playerId];
   const s = p.state;
-  let food = 2, gold = 2, iron = 1, culture = 0;
+  let food = 1, gold = 1, iron = 0, culture = 1;
 
   const playerCities = cities.filter(c => c.owner === playerId);
+
   for (const city of playerCities) {
     food += 2;
-    gold += 2;
+    gold += 1;
 
     const neighbors = getHexNeighbors(city.col, city.row);
     for (const n of neighbors) {
@@ -997,6 +868,7 @@ function getIncome(playerId) {
         food += Math.floor(t.food * 0.5);
         gold += Math.floor(t.gold * 0.5);
         iron += Math.floor(t.iron * 0.5);
+        culture += Math.floor(t.culture * 0.5);
       }
     }
 
@@ -1008,6 +880,12 @@ function getIncome(playerId) {
     }
   }
 
+  const terrIncome = getTerritoryIncome(playerId);
+  food += terrIncome.food;
+  gold += terrIncome.gold;
+  iron += terrIncome.iron;
+  culture += terrIncome.culture;
+
   for (const techId of p.techs) {
     const tech = TECHS[techId];
     if (tech.effect.foodPerCity) food += tech.effect.foodPerCity * playerCities.length;
@@ -1016,18 +894,17 @@ function getIncome(playerId) {
     if (tech.effect.culturePerCity) culture += tech.effect.culturePerCity * playerCities.length;
   }
 
-  food += s.foodBonus || 0;
-  gold += s.goldBonus || 0;
-  culture += s.cultureBonus || 0;
+  if (s.cultureBonus) culture += s.cultureBonus;
+  if (s.goldPerCity) gold += s.goldPerCity * playerCities.length;
+  if (s.foodPerCity) food += s.foodPerCity * playerCities.length;
+  if (s.culturePerCity) culture += s.culturePerCity * playerCities.length;
 
   return { food, gold, iron, culture };
 }
 
 function canAfford(playerId, cost) {
   const p = players[playerId];
-  return (p.food >= (cost.food || 0)) &&
-         (p.gold >= (cost.gold || 0)) &&
-         (p.iron >= (cost.iron || 0));
+  return (p.food >= (cost.food || 0)) && (p.gold >= (cost.gold || 0)) && (p.iron >= (cost.iron || 0));
 }
 
 function spendResources(playerId, cost) {
@@ -1035,6 +912,29 @@ function spendResources(playerId, cost) {
   p.food -= (cost.food || 0);
   p.gold -= (cost.gold || 0);
   p.iron -= (cost.iron || 0);
+}
+
+function getUnitAttack(unit) {
+  const uDef = UNITS[unit.type];
+  const owner = unit.owner;
+  if (owner === 'barbarian') return uDef.attack;
+  const s = STATES[owner];
+  let atk = uDef.attack;
+  if (uDef.range && s.rangedBonus) atk += s.rangedBonus;
+  if (unit.type === 'cavalry' && s.cavalryBonus) atk += s.cavalryBonus;
+  if (uDef.melee && s.meleeBonus) atk += s.meleeBonus;
+  for (const techId of players[owner].techs) {
+    if (TECHS[techId].effect.globalAttack) atk += TECHS[techId].effect.globalAttack;
+  }
+  if (cities.some(c => c.owner === owner && c.buildings.includes('barracks'))) atk += 1;
+  return atk;
+}
+
+function getUnitDefense(unit) {
+  const uDef = UNITS[unit.type];
+  let def = uDef.defense;
+  if (unit.owner !== 'barbarian' && cities.some(c => c.owner === unit.owner && c.buildings.includes('barracks'))) def += 1;
+  return def;
 }
 
 // ============================================================
@@ -1051,18 +951,30 @@ function resizeCanvas() {
   canvas.height = window.innerHeight - 48;
 }
 
-function drawHex(cx, cy, size, fillColor, strokeColor, lineWidth = 1) {
+function drawHex(cx, cy, size, fillColor, strokeColor, lineWidth) {
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = Math.PI / 180 * (60 * i - 30);
     const x = cx + size * Math.cos(angle);
     const y = cy + size * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.closePath();
   if (fillColor) { ctx.fillStyle = fillColor; ctx.fill(); }
-  if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lineWidth; ctx.stroke(); }
+  if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lineWidth || 1; ctx.stroke(); }
+}
+
+function blendColors(c1, c2, ratio) {
+  const hex = s => parseInt(s, 16);
+  const r1 = hex(c1.slice(1,3)), g1 = hex(c1.slice(3,5)), b1 = hex(c1.slice(5,7));
+  const r2 = hex(c2.slice(1,3)), g2 = hex(c2.slice(3,5)), b2 = hex(c2.slice(5,7));
+  const r = Math.round(r1*(1-ratio)+r2*ratio), g = Math.round(g1*(1-ratio)+g2*ratio), b = Math.round(b1*(1-ratio)+b2*ratio);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+function getOwnerColor(ownerId) {
+  if (ownerId === 'barbarian') return '#aa0000';
+  return STATES[ownerId]?.lightColor || '#888';
 }
 
 function render() {
@@ -1074,49 +986,29 @@ function render() {
     for (let col = 0; col < MAP_W; col++) {
       const tile = mapData[row][col];
       const { x, y } = hexToPixel(col, row);
-      const sx = x - cameraX;
-      const sy = y - cameraY;
-
-      if (sx < -HEX_SIZE * 2 || sx > canvas.width + HEX_SIZE * 2) continue;
-      if (sy < -HEX_SIZE * 2 || sy > canvas.height + HEX_SIZE * 2) continue;
+      const sx = x - cameraX, sy = y - cameraY;
+      if (sx < -80 || sx > canvas.width + 80 || sy < -80 || sy > canvas.height + 80) continue;
 
       let color = TERRAIN[tile.terrain].color;
-
       if (tile.owner && tile.owner !== currentPlayer) {
-        const ownerColor = STATES[tile.owner].lightColor;
-        color = blendColors(color, ownerColor, 0.3);
+        color = blendColors(color, getOwnerColor(tile.owner), 0.3);
       } else if (tile.owner === currentPlayer) {
         color = blendColors(color, '#ffffff', 0.1);
       }
 
-      let stroke = '#2a2a2a';
-      let strokeW = 0.5;
-
-      if (selectedHex && selectedHex.col === col && selectedHex.row === row) {
-        stroke = '#ffffff';
-        strokeW = 2;
-      }
+      let stroke = '#2a2a2a', strokeW = 0.5;
+      if (selectedHex && selectedHex.col === col && selectedHex.row === row) { stroke = '#ffffff'; strokeW = 2; }
 
       const isMove = moveHighlights.some(h => h.col === col && h.row === row);
       const isAttack = attackHighlights.some(h => h.col === col && h.row === row);
-
-      if (isMove) {
-        color = blendColors(color, '#4488ff', 0.35);
-        stroke = '#6699ff';
-        strokeW = 1.5;
-      }
-      if (isAttack) {
-        color = blendColors(color, '#ff4444', 0.4);
-        stroke = '#ff6666';
-        strokeW = 1.5;
-      }
+      if (isMove) { color = blendColors(color, '#4488ff', 0.35); stroke = '#6699ff'; strokeW = 1.5; }
+      if (isAttack) { color = blendColors(color, '#ff4444', 0.4); stroke = '#ff6666'; strokeW = 1.5; }
 
       drawHex(sx, sy, HEX_SIZE, color, stroke, strokeW);
 
       if (tile.owner) {
-        ctx.fillStyle = STATES[tile.owner].color;
-        ctx.globalAlpha = 0.15;
-        drawHex(sx, sy, HEX_SIZE - 3, ctx.fillStyle, null);
+        ctx.globalAlpha = 0.12;
+        drawHex(sx, sy, HEX_SIZE - 3, tile.owner === 'barbarian' ? '#aa0000' : STATES[tile.owner].color, null);
         ctx.fill();
         ctx.globalAlpha = 1.0;
       }
@@ -1125,49 +1017,43 @@ function render() {
 
   for (const city of cities) {
     const { x, y } = hexToPixel(city.col, city.row);
-    const sx = x - cameraX;
-    const sy = y - cameraY;
-
-    if (sx < -50 || sx > canvas.width + 50) continue;
-    if (sy < -50 || sy > canvas.height + 50) continue;
+    const sx = x - cameraX, sy = y - cameraY;
+    if (sx < -50 || sx > canvas.width + 50 || sy < -50 || sy > canvas.height + 50) continue;
 
     ctx.font = city.isCapital ? '22px serif' : '18px serif';
     ctx.textAlign = 'center';
     ctx.fillText(city.isCapital ? '🏯' : '🏘️', sx, sy - 4);
 
     ctx.font = 'bold 9px sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 2;
     ctx.strokeText(city.name, sx, sy + 16);
     ctx.fillText(city.name, sx, sy + 16);
 
     if (city.hp < city.maxHp) {
-      const barW = 30;
-      const hpRatio = city.hp / city.maxHp;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(sx - barW/2, sy + 20, barW, 4);
-      ctx.fillStyle = hpRatio > 0.5 ? '#27ae60' : (hpRatio > 0.25 ? '#f39c12' : '#e74c3c');
-      ctx.fillRect(sx - barW/2, sy + 20, barW * hpRatio, 4);
+      const barW = 30, hpR = city.hp / city.maxHp;
+      ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy + 20, barW, 4);
+      ctx.fillStyle = hpR > 0.5 ? '#27ae60' : hpR > 0.25 ? '#f39c12' : '#e74c3c';
+      ctx.fillRect(sx - barW/2, sy + 20, barW * hpR, 4);
     }
   }
 
-  for (const unit of units) {
+  const allUnits = [...units, ...barbarians];
+  for (const unit of allUnits) {
     const { x, y } = hexToPixel(unit.col, unit.row);
-    const sx = x - cameraX;
-    const sy = y - cameraY;
-
-    if (sx < -50 || sx > canvas.width + 50) continue;
-    if (sy < -50 || sy > canvas.height + 50) continue;
+    const sx = x - cameraX, sy = y - cameraY;
+    if (sx < -50 || sx > canvas.width + 50 || sy < -50 || sy > canvas.height + 50) continue;
 
     const uDef = UNITS[unit.type];
-    const ownerState = STATES[unit.owner];
+    const isBarbarian = unit.owner === 'barbarian';
+    const unitColor = isBarbarian ? '#660000' : STATES[unit.owner].color;
+    const borderColor = (unit.owner === currentPlayer) ? '#ffffff' :
+                        isBarbarian ? '#cc3333' : STATES[unit.owner].lightColor;
 
     ctx.beginPath();
     ctx.arc(sx, sy, 14, 0, Math.PI * 2);
-    ctx.fillStyle = ownerState.color;
+    ctx.fillStyle = unitColor;
     ctx.fill();
-    ctx.strokeStyle = unit.owner === currentPlayer ? '#ffffff' : ownerState.lightColor;
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = selectedUnit && selectedUnit.id === unit.id ? 3 : 1.5;
     ctx.stroke();
 
@@ -1177,19 +1063,15 @@ function render() {
     ctx.fillText(uDef.icon, sx, sy);
 
     if (unit.hp < unit.maxHp) {
-      const barW = 24;
-      const hpRatio = unit.hp / unit.maxHp;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(sx - barW/2, sy + 16, barW, 3);
-      ctx.fillStyle = hpRatio > 0.5 ? '#27ae60' : '#e74c3c';
-      ctx.fillRect(sx - barW/2, sy + 16, barW * hpRatio, 3);
+      const barW = 24, hpR = unit.hp / unit.maxHp;
+      ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy + 16, barW, 3);
+      ctx.fillStyle = hpR > 0.5 ? '#27ae60' : '#e74c3c';
+      ctx.fillRect(sx - barW/2, sy + 16, barW * hpR, 3);
     }
 
     if (unit.owner === currentPlayer && !unit.moved) {
-      ctx.beginPath();
-      ctx.arc(sx + 12, sy - 12, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#4488ff';
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 12, sy - 12, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#4488ff'; ctx.fill();
     }
   }
 
@@ -1197,11 +1079,9 @@ function render() {
 }
 
 function renderMinimap() {
-  const mw = minimapCanvas.width;
-  const mh = minimapCanvas.height;
+  const mw = minimapCanvas.width, mh = minimapCanvas.height;
   minimapCtx.fillStyle = '#0a0a1a';
   minimapCtx.fillRect(0, 0, mw, mh);
-
   const scaleX = mw / (MAP_W * HEX_SIZE * 1.5);
   const scaleY = mh / (MAP_H * HEX_SIZE * 1.8);
   const scale = Math.min(scaleX, scaleY);
@@ -1210,100 +1090,54 @@ function renderMinimap() {
     for (let col = 0; col < MAP_W; col++) {
       const tile = mapData[row][col];
       const { x, y } = hexToPixel(col, row);
-      const mx = x * scale + 5;
-      const my = y * scale + 5;
-
-      let color = tile.owner ? STATES[tile.owner].lightColor : TERRAIN[tile.terrain].color;
-
-      minimapCtx.fillStyle = color;
-      minimapCtx.fillRect(mx - 3, my - 3, 6, 6);
+      minimapCtx.fillStyle = tile.owner ? getOwnerColor(tile.owner) : TERRAIN[tile.terrain].color;
+      minimapCtx.fillRect(x * scale + 5 - 3, y * scale + 5 - 3, 6, 6);
     }
   }
-
-  const vpW = canvas.width * scale;
-  const vpH = canvas.height * scale;
-  const vpX = cameraX * scale + 5;
-  const vpY = cameraY * scale + 5;
-  minimapCtx.strokeStyle = '#ffffff';
-  minimapCtx.lineWidth = 1;
-  minimapCtx.strokeRect(vpX, vpY, vpW, vpH);
-}
-
-function blendColors(c1, c2, ratio) {
-  const hex = s => parseInt(s, 16);
-  const r1 = hex(c1.slice(1,3)), g1 = hex(c1.slice(3,5)), b1 = hex(c1.slice(5,7));
-  const r2 = hex(c2.slice(1,3)), g2 = hex(c2.slice(3,5)), b2 = hex(c2.slice(5,7));
-  const r = Math.round(r1 * (1-ratio) + r2 * ratio);
-  const g = Math.round(g1 * (1-ratio) + g2 * ratio);
-  const b = Math.round(b1 * (1-ratio) + b2 * ratio);
-  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+  minimapCtx.strokeStyle = '#ffffff'; minimapCtx.lineWidth = 1;
+  minimapCtx.strokeRect(cameraX * scale + 5, cameraY * scale + 5, canvas.width * scale, canvas.height * scale);
 }
 
 // ============================================================
-// INPUT HANDLING
+// INPUT
 // ============================================================
 
 canvas.addEventListener('mousedown', e => {
   isDragging = true;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  dragCamX = cameraX;
-  dragCamY = cameraY;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  dragCamX = cameraX; dragCamY = cameraY;
 });
-
 canvas.addEventListener('mousemove', e => {
   if (!isDragging) return;
-  const dx = e.clientX - dragStartX;
-  const dy = e.clientY - dragStartY;
-  cameraX = dragCamX - dx;
-  cameraY = dragCamY - dy;
+  cameraX = dragCamX - (e.clientX - dragStartX);
+  cameraY = dragCamY - (e.clientY - dragStartY);
   render();
 });
-
 canvas.addEventListener('mouseup', e => {
-  const dx = Math.abs(e.clientX - dragStartX);
-  const dy = Math.abs(e.clientY - dragStartY);
+  const dx = Math.abs(e.clientX - dragStartX), dy = Math.abs(e.clientY - dragStartY);
   isDragging = false;
-  if (dx < 5 && dy < 5) {
-    handleMapClick(e);
-  }
+  if (dx < 5 && dy < 5) handleMapClick(e);
 });
-
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-}, { passive: false });
+canvas.addEventListener('wheel', e => e.preventDefault(), { passive: false });
 
 minimapCanvas.addEventListener('click', e => {
-  const mw = minimapCanvas.width;
-  const mh = minimapCanvas.height;
-  const scaleX = mw / (MAP_W * HEX_SIZE * 1.5);
-  const scaleY = mh / (MAP_H * HEX_SIZE * 1.8);
-  const scale = Math.min(scaleX, scaleY);
-
+  const mw = minimapCanvas.width, mh = minimapCanvas.height;
+  const scale = Math.min(mw / (MAP_W * HEX_SIZE * 1.5), mh / (MAP_H * HEX_SIZE * 1.8));
   const rect = minimapCanvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-
-  cameraX = (mx - 5) / scale - canvas.width / 2;
-  cameraY = (my - 5) / scale - canvas.height / 2;
+  cameraX = (e.clientX - rect.left - 5) / scale - canvas.width / 2;
+  cameraY = (e.clientY - rect.top - 5) / scale - canvas.height / 2;
   render();
 });
 
 function handleMapClick(e) {
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left + cameraX;
-  const my = e.clientY - rect.top + cameraY;
-  const hex = pixelToHex(mx, my);
-
+  const hex = pixelToHex(e.clientX - rect.left + cameraX, e.clientY - rect.top + cameraY);
   if (hex.col < 0 || hex.col >= MAP_W || hex.row < 0 || hex.row >= MAP_H) return;
-
-  const tile = mapData[hex.row][hex.col];
 
   if (selectedUnit && moveHighlights.some(h => h.col === hex.col && h.row === hex.row)) {
     moveUnit(selectedUnit, hex.col, hex.row);
     return;
   }
-
   if (selectedUnit && attackHighlights.some(h => h.col === hex.col && h.row === hex.row)) {
     attackTarget(selectedUnit, hex.col, hex.row);
     return;
@@ -1318,77 +1152,86 @@ function handleMapClick(e) {
   const unitHere = units.find(u => u.col === hex.col && u.row === hex.row && u.owner === currentPlayer);
   if (unitHere) {
     selectedUnit = unitHere;
-    calculateMoveRange(unitHere);
+    calculateMoveAndAttack(unitHere);
   }
 
-  const cityHere = cities.find(c => c.col === hex.col && c.row === hex.row);
-  if (cityHere && cityHere.owner === currentPlayer) {
-    selectedCity = cityHere;
-  }
+  const cityHere = cities.find(c => c.col === hex.col && c.row === hex.row && c.owner === currentPlayer);
+  if (cityHere) selectedCity = cityHere;
 
   updateRightPanel();
   render();
 }
 
-function calculateMoveRange(unit) {
+function calculateMoveAndAttack(unit) {
   moveHighlights = [];
   attackHighlights = [];
   const uDef = UNITS[unit.type];
+  if (unit.moved && unit.attacked) return;
 
-  if (unit.moved) return;
+  if (!unit.moved) {
+    const visited = new Map();
+    const queue = [{ col: unit.col, row: unit.row, cost: 0 }];
+    visited.set(`${unit.col},${unit.row}`, 0);
 
-  const visited = new Map();
-  const queue = [{ col: unit.col, row: unit.row, cost: 0 }];
-  visited.set(`${unit.col},${unit.row}`, 0);
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      const neighbors = getHexNeighbors(curr.col, curr.row);
 
-  while (queue.length > 0) {
-    const curr = queue.shift();
-    const neighbors = getHexNeighbors(curr.col, curr.row);
+      for (const n of neighbors) {
+        const key = `${n.col},${n.row}`;
+        const tile = mapData[n.row][n.col];
+        const terrain = TERRAIN[tile.terrain];
+        if (terrain.moveCost >= 99) continue;
+        const moveCost = curr.cost + terrain.moveCost;
+        if (moveCost > uDef.move) continue;
+        if (visited.has(key) && visited.get(key) <= moveCost) continue;
+        visited.set(key, moveCost);
 
-    for (const n of neighbors) {
-      const key = `${n.col},${n.row}`;
-      const tile = mapData[n.row][n.col];
-      const terrain = TERRAIN[tile.terrain];
-      const moveCost = curr.cost + terrain.moveCost;
-
-      if (moveCost > uDef.move) continue;
-      if (terrain.moveCost >= 99) continue;
-      if (visited.has(key) && visited.get(key) <= moveCost) continue;
-
-      visited.set(key, moveCost);
-
-      const enemyUnit = units.find(u => u.col === n.col && u.row === n.row && u.owner !== currentPlayer);
-      const enemyCity = cities.find(c => c.col === n.col && c.row === n.row && c.owner !== currentPlayer);
-
-      if (enemyUnit) {
-        const rel = players[currentPlayer].relations[enemyUnit.owner];
-        if (rel === 'war') {
-          attackHighlights.push(n);
+        const allUnits = [...units, ...barbarians];
+        const occupant = allUnits.find(u => u.col === n.col && u.row === n.row);
+        if (occupant && occupant.id !== unit.id) {
+          continue;
         }
-        continue;
-      }
 
-      if (enemyCity && players[currentPlayer].relations[enemyCity.owner] === 'war') {
-        attackHighlights.push(n);
-      }
-
-      const friendlyUnit = units.find(u => u.col === n.col && u.row === n.row);
-      if (!friendlyUnit) {
         moveHighlights.push(n);
         queue.push({ col: n.col, row: n.row, cost: moveCost });
       }
     }
   }
 
-  if (uDef.range) {
-    for (let row = 0; row < MAP_H; row++) {
-      for (let col = 0; col < MAP_W; col++) {
-        const dist = hexDistance(unit.col, unit.row, col, row);
-        if (dist > 0 && dist <= uDef.range) {
-          const enemyUnit = units.find(u => u.col === col && u.row === row && u.owner !== currentPlayer);
-          if (enemyUnit && players[currentPlayer].relations[enemyUnit.owner] === 'war') {
-            if (!attackHighlights.some(h => h.col === col && h.row === row)) {
-              attackHighlights.push({ col, row });
+  if (!unit.attacked) {
+    if (uDef.melee) {
+      const neighbors = getHexNeighbors(unit.col, unit.row);
+      for (const n of neighbors) {
+        const allEnemies = [...units, ...barbarians];
+        const enemy = allEnemies.find(u => u.col === n.col && u.row === n.row && u.owner !== currentPlayer);
+        if (enemy) {
+          const isHostile = enemy.owner === 'barbarian' || players[currentPlayer].relations[enemy.owner] === 'war';
+          if (isHostile) attackHighlights.push(n);
+        }
+        const enemyCity = cities.find(c => c.col === n.col && c.row === n.row && c.owner !== currentPlayer);
+        if (enemyCity && players[currentPlayer].relations[enemyCity.owner] === 'war') {
+          if (!attackHighlights.some(h => h.col === n.col && h.row === n.row)) {
+            attackHighlights.push(n);
+          }
+        }
+      }
+    } else if (uDef.range) {
+      for (let row = 0; row < MAP_H; row++) {
+        for (let col = 0; col < MAP_W; col++) {
+          const dist = hexDistance(unit.col, unit.row, col, row);
+          if (dist > 0 && dist <= uDef.range) {
+            const allEnemies = [...units, ...barbarians];
+            const enemy = allEnemies.find(u => u.col === col && u.row === row && u.owner !== currentPlayer);
+            if (enemy) {
+              const isHostile = enemy.owner === 'barbarian' || players[currentPlayer].relations[enemy.owner] === 'war';
+              if (isHostile) attackHighlights.push({ col, row });
+            }
+            const enemyCity = cities.find(c => c.col === col && c.row === row && c.owner !== currentPlayer);
+            if (enemyCity && players[currentPlayer].relations[enemyCity.owner] === 'war') {
+              if (!attackHighlights.some(h => h.col === col && h.row === row)) {
+                attackHighlights.push({ col, row });
+              }
             }
           }
         }
@@ -1398,15 +1241,14 @@ function calculateMoveRange(unit) {
 }
 
 function moveUnit(unit, toCol, toRow) {
-  const tile = mapData[toRow][toCol];
   unit.col = toCol;
   unit.row = toRow;
   unit.moved = true;
 
-  if (!tile.owner || tile.owner !== currentPlayer) {
+  const tile = mapData[toRow][toCol];
+  if (!tile.owner || (tile.owner !== currentPlayer && tile.owner !== 'barbarian')) {
     tile.owner = currentPlayer;
-    const neighbors = getHexNeighbors(toCol, toRow);
-    for (const n of neighbors) {
+    for (const n of getHexNeighbors(toCol, toRow)) {
       const nt = mapData[n.row]?.[n.col];
       if (nt && !nt.owner) nt.owner = currentPlayer;
     }
@@ -1416,7 +1258,7 @@ function moveUnit(unit, toCol, toRow) {
   attackHighlights = [];
 
   if (!unit.attacked) {
-    calculateMoveRange(unit);
+    calculateMoveAndAttack(unit);
     moveHighlights = [];
   }
 
@@ -1427,42 +1269,40 @@ function moveUnit(unit, toCol, toRow) {
 
 function attackTarget(attacker, col, row) {
   const uDef = UNITS[attacker.type];
-  const state = STATES[attacker.owner];
-  let atkPower = uDef.attack;
+  let atkPower = getUnitAttack(attacker);
 
-  if (uDef.range && state.rangedBonus) atkPower += state.rangedBonus;
-  if (attacker.type === 'cavalry' && state.cavalryBonus) atkPower += state.cavalryBonus;
-
-  for (const techId of players[attacker.owner].techs) {
-    const tech = TECHS[techId];
-    if (tech.effect.globalAttack) atkPower += tech.effect.globalAttack;
-  }
-
+  const allEnemyUnits = [...units, ...barbarians];
+  const targetUnit = allEnemyUnits.find(u => u.col === col && u.row === row && u.owner !== attacker.owner);
   const targetCity = cities.find(c => c.col === col && c.row === row && c.owner !== attacker.owner);
-  const targetUnit = units.find(u => u.col === col && u.row === row && u.owner !== attacker.owner);
 
   if (targetUnit) {
     const defDef = UNITS[targetUnit.type];
     const defTerrain = TERRAIN[mapData[row][col].terrain];
-    let defPower = defDef.defense + defTerrain.defense;
+    let defPower = getUnitDefense(targetUnit) + defTerrain.defense;
 
     const damage = Math.max(1, atkPower - Math.floor(defPower / 2) + Math.floor(Math.random() * 3));
     targetUnit.hp -= damage;
 
-    const counterDmg = Math.max(0, defDef.attack - Math.floor(uDef.defense / 2) - 1);
-    if (!uDef.range) {
+    let counterDmg = 0;
+    if (uDef.melee) {
+      counterDmg = Math.max(0, defDef.attack - Math.floor(uDef.defense / 2) - 1);
       attacker.hp -= counterDmg;
     }
 
-    showToast(`${uDef.icon} dealt ${damage} damage! ${defDef.icon} countered for ${uDef.range ? 0 : counterDmg}.`);
+    showToast(`${uDef.icon} dealt ${damage} dmg! ${defDef.icon} countered for ${counterDmg}.`);
 
     if (targetUnit.hp <= 0) {
-      units = units.filter(u => u.id !== targetUnit.id);
-      showToast(`${defDef.icon} ${STATES[targetUnit.owner].name} ${defDef.name} destroyed!`);
-
-      if (!uDef.range) {
-        attacker.col = col;
-        attacker.row = row;
+      const isBarbarian = targetUnit.owner === 'barbarian';
+      if (isBarbarian) {
+        barbarians = barbarians.filter(u => u.id !== targetUnit.id);
+        players[currentPlayer].gold += 3;
+        showToast(`🗡️ Barbarian destroyed! +3 gold`);
+      } else {
+        units = units.filter(u => u.id !== targetUnit.id);
+        showToast(`${STATES[targetUnit.owner].name} ${defDef.name} destroyed!`);
+      }
+      if (uDef.melee) {
+        attacker.col = col; attacker.row = row;
         mapData[row][col].owner = attacker.owner;
       }
     }
@@ -1479,15 +1319,10 @@ function attackTarget(attacker, col, row) {
     if (uDef.siegeBonus) atkStr += uDef.siegeBonus;
     const damage = Math.max(1, atkStr - Math.floor(targetCity.defense / 3));
     targetCity.hp -= damage;
-
-    showToast(`${uDef.icon} dealt ${damage} damage to ${targetCity.name}!`);
-
+    showToast(`${uDef.icon} dealt ${damage} dmg to ${targetCity.name}!`);
     if (targetCity.hp <= 0) {
       captureCity(targetCity, attacker.owner);
-      if (!uDef.range) {
-        attacker.col = col;
-        attacker.row = row;
-      }
+      if (uDef.melee) { attacker.col = col; attacker.row = row; }
     }
   }
 
@@ -1502,30 +1337,139 @@ function attackTarget(attacker, col, row) {
 
 function captureCity(city, newOwner) {
   const oldOwner = city.owner;
-  showToast(`🏯 ${STATES[newOwner].name} captured ${city.name}!`);
-
+  showToast(`🏯 ${STATES[newOwner]?.name || newOwner} captured ${city.name}!`);
   city.owner = newOwner;
   city.hp = Math.floor(city.maxHp / 2);
 
   for (let dr = -2; dr <= 2; dr++) {
     for (let dc = -2; dc <= 2; dc++) {
       const r = city.row + dr, c = city.col + dc;
-      if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W) {
-        if (Math.abs(dr) + Math.abs(dc) <= 2) {
-          if (mapData[r][c].owner === oldOwner) {
-            mapData[r][c].owner = newOwner;
-          }
-        }
+      if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W && Math.abs(dr) + Math.abs(dc) <= 2) {
+        if (mapData[r][c].owner === oldOwner) mapData[r][c].owner = newOwner;
       }
     }
   }
 
-  const remaining = cities.filter(c => c.owner === oldOwner);
-  if (remaining.length === 0) {
+  if (cities.filter(c => c.owner === oldOwner).length === 0 && players[oldOwner]) {
     players[oldOwner].alive = false;
     showToast(`💀 ${STATES[oldOwner].name} has been eliminated!`);
-
     units = units.filter(u => u.owner !== oldOwner);
+  }
+}
+
+// ============================================================
+// BARBARIANS
+// ============================================================
+
+function spawnBarbarians() {
+  if (turn < 3) return;
+  if (barbarians.length >= 12) return;
+  if (Math.random() > 0.4) return;
+
+  const unclaimed = [];
+  for (let row = 0; row < MAP_H; row++) {
+    for (let col = 0; col < MAP_W; col++) {
+      const tile = mapData[row][col];
+      if (!tile.owner && TERRAIN[tile.terrain].moveCost < 99) {
+        const nearCity = cities.some(c => hexDistance(c.col, c.row, col, row) <= 3);
+        if (!nearCity) unclaimed.push({ col, row });
+      }
+    }
+  }
+
+  if (unclaimed.length === 0) return;
+
+  const count = 1 + (Math.random() < 0.3 ? 1 : 0);
+  for (let i = 0; i < count && unclaimed.length > 0; i++) {
+    const idx = Math.floor(Math.random() * unclaimed.length);
+    const pos = unclaimed.splice(idx, 1)[0];
+    const occupied = [...units, ...barbarians].some(u => u.col === pos.col && u.row === pos.row);
+    if (occupied) continue;
+
+    const type = Math.random() < 0.6 ? 'militia' : (Math.random() < 0.5 ? 'spearman' : 'archer');
+    const uDef = UNITS[type];
+
+    barbarians.push({
+      id: `barb_${turn}_${i}_${Math.random().toString(36).slice(2,6)}`,
+      type, owner: 'barbarian',
+      col: pos.col, row: pos.row,
+      hp: uDef.hp, maxHp: uDef.hp,
+      moved: false, attacked: false
+    });
+
+    mapData[pos.row][pos.col].owner = 'barbarian';
+  }
+}
+
+function runBarbarians() {
+  for (const barb of [...barbarians]) {
+    barb.moved = false;
+    barb.attacked = false;
+    const uDef = UNITS[barb.type];
+
+    let nearest = null, nearestDist = Infinity;
+    const targets = [...units, ...cities.map(c => ({col: c.col, row: c.row, isCity: true}))];
+    for (const t of targets) {
+      const d = hexDistance(barb.col, barb.row, t.col, t.row);
+      if (d < nearestDist && d <= 6) {
+        nearestDist = d;
+        nearest = { col: t.col, row: t.row };
+      }
+    }
+
+    if (!nearest) {
+      const neighbors = getHexNeighbors(barb.col, barb.row)
+        .filter(n => TERRAIN[mapData[n.row][n.col].terrain].moveCost < 99 &&
+          ![...units, ...barbarians].some(u => u.col === n.col && u.row === n.row));
+      if (neighbors.length > 0) {
+        const t = neighbors[Math.floor(Math.random() * neighbors.length)];
+        barb.col = t.col; barb.row = t.row;
+        mapData[t.row][t.col].owner = 'barbarian';
+      }
+      continue;
+    }
+
+    if (nearestDist <= 1) {
+      const tUnit = units.find(u => u.col === nearest.col && u.row === nearest.row);
+      const tCity = cities.find(c => c.col === nearest.col && c.row === nearest.row);
+
+      if (tUnit) {
+        const defDef = UNITS[tUnit.type];
+        const damage = Math.max(1, uDef.attack - Math.floor(getUnitDefense(tUnit) / 2) + Math.floor(Math.random() * 2));
+        tUnit.hp -= damage;
+        const counter = Math.max(0, getUnitAttack(tUnit) - Math.floor(uDef.defense / 2) - 1);
+        barb.hp -= counter;
+
+        if (tUnit.hp <= 0) {
+          units = units.filter(u => u.id !== tUnit.id);
+          if (tUnit.owner === currentPlayer) showToast(`💀 Barbarians killed your ${defDef.name}!`);
+          barb.col = nearest.col; barb.row = nearest.row;
+          mapData[nearest.row][nearest.col].owner = 'barbarian';
+        }
+        if (barb.hp <= 0) {
+          barbarians = barbarians.filter(b => b.id !== barb.id);
+        }
+      } else if (tCity) {
+        const damage = Math.max(1, uDef.attack - Math.floor(tCity.defense / 4));
+        tCity.hp -= damage;
+        if (tCity.owner === currentPlayer) showToast(`⚠️ Barbarians attack ${tCity.name}! (-${damage} HP)`);
+        if (tCity.hp <= 0) tCity.hp = 1;
+      }
+    } else {
+      const neighbors = getHexNeighbors(barb.col, barb.row);
+      let bestMove = null, bestDist = nearestDist;
+      for (const n of neighbors) {
+        const tile = mapData[n.row][n.col];
+        if (TERRAIN[tile.terrain].moveCost >= 99) continue;
+        if ([...units, ...barbarians].some(u => u.col === n.col && u.row === n.row)) continue;
+        const d = hexDistance(n.col, n.row, nearest.col, nearest.row);
+        if (d < bestDist) { bestDist = d; bestMove = n; }
+      }
+      if (bestMove) {
+        barb.col = bestMove.col; barb.row = bestMove.row;
+        mapData[bestMove.row][bestMove.col].owner = 'barbarian';
+      }
+    }
   }
 }
 
@@ -1535,16 +1479,10 @@ function captureCity(city, newOwner) {
 
 function updateRightPanel() {
   const panel = document.getElementById('panel-content');
-
-  if (selectedCity) {
-    renderCityPanel(panel, selectedCity);
-  } else if (selectedUnit) {
-    renderUnitPanel(panel, selectedUnit);
-  } else if (selectedHex) {
-    renderTilePanel(panel, selectedHex);
-  } else {
-    panel.innerHTML = `<h3>Select a tile</h3><p style="color: var(--text-dim); font-size: 0.85rem;">Click on the map to view details.</p>`;
-  }
+  if (selectedCity) renderCityPanel(panel, selectedCity);
+  else if (selectedUnit) renderUnitPanel(panel, selectedUnit);
+  else if (selectedHex) renderTilePanel(panel, selectedHex);
+  else panel.innerHTML = `<h3>Select a tile</h3><p style="color: var(--text-dim); font-size: 0.85rem;">Click on the map to view details.</p>`;
 }
 
 function renderCityPanel(panel, city) {
@@ -1554,46 +1492,45 @@ function renderCityPanel(panel, city) {
   html += `<div class="info-row"><span class="label">HP</span><span>${city.hp}/${city.maxHp}</span></div>`;
   html += `<div class="info-row"><span class="label">Defense</span><span>${city.defense}</span></div>`;
 
-  html += `<h3 style="margin-top: 12px;">Buildings</h3>`;
-  if (city.buildings.length === 0) {
-    html += `<p style="color: var(--text-dim); font-size: 0.8rem;">No buildings yet.</p>`;
-  }
+  html += `<h3 style="margin-top:12px">Buildings</h3>`;
+  if (city.buildings.length === 0) html += `<p style="color:var(--text-dim);font-size:0.8rem;">No buildings yet.</p>`;
   for (const bId of city.buildings) {
     const b = BUILDINGS[bId];
-    html += `<div class="info-row"><span>${b.icon} ${b.name}</span></div>`;
+    html += `<div class="info-row"><span>${b.icon} ${b.name}</span><span style="color:var(--text-dim);font-size:0.7rem">${b.desc.split('.')[0]}</span></div>`;
   }
 
-  html += `<h3 style="margin-top: 12px;">Build</h3>`;
-
+  html += `<h3 style="margin-top:12px">Build</h3>`;
   for (const [bId, b] of Object.entries(BUILDINGS)) {
     if (city.buildings.includes(bId)) continue;
     const hasPrereq = !b.prereq || p.techs.has(b.prereq);
     const affordable = canAfford(currentPlayer, b.cost);
     const disabled = !hasPrereq || !affordable;
-
     let costStr = [];
     if (b.cost.gold) costStr.push(`💰${b.cost.gold}`);
     if (b.cost.iron) costStr.push(`⚔️${b.cost.iron}`);
 
+    let effectStr = [];
+    if (b.effect.food) effectStr.push(`+${b.effect.food} 🌾`);
+    if (b.effect.gold) effectStr.push(`+${b.effect.gold} 💰`);
+    if (b.effect.culture) effectStr.push(`+${b.effect.culture} 📜`);
+    if (b.effect.defense) effectStr.push(`+${b.effect.defense} 🛡️`);
+    if (b.effect.unitBonus) effectStr.push(`+${b.effect.unitBonus} ⚔️/🛡️ to units`);
+
     html += `<button class="action-btn" ${disabled ? 'disabled' : ''} onclick="buildBuilding('${city.id}','${bId}')">
       ${b.icon} ${b.name} <span class="cost">${costStr.join(' ')}</span>
+      <span class="tooltip-text"><strong>${b.name}</strong><br>${b.desc}<br><br><strong>Effect:</strong> ${effectStr.join(', ')}<br><strong>Cost:</strong> ${costStr.join(' ')}</span>
     </button>`;
-    if (!hasPrereq) html += `<div style="font-size:0.65rem; color:var(--red); margin: -2px 0 4px 8px;">Requires: ${TECHS[b.prereq]?.name}</div>`;
+    if (!hasPrereq) html += `<div style="font-size:0.65rem;color:var(--red);margin:-2px 0 4px 8px;">Requires: ${TECHS[b.prereq]?.name}</div>`;
   }
 
-  html += `<h3 style="margin-top: 12px;">Train Units</h3>`;
-
+  html += `<h3 style="margin-top:12px">Train Units</h3>`;
   for (const [uId, u] of Object.entries(UNITS)) {
     const hasPrereq = !u.prereq || p.techs.has(u.prereq);
     let cost = { ...u.cost };
-    if (p.state.ironDiscount && cost.iron) {
-      cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
-    }
+    if (p.state.ironDiscount && cost.iron) cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
     const affordable = canAfford(currentPlayer, cost);
-
-    const spotFree = !units.some(u2 => u2.col === city.col && u2.row === city.row);
+    const spotFree = ![...units, ...barbarians].some(u2 => u2.col === city.col && u2.row === city.row);
     const disabled = !hasPrereq || !affordable || !spotFree;
-
     let costStr = [];
     if (cost.food) costStr.push(`🌾${cost.food}`);
     if (cost.gold) costStr.push(`💰${cost.gold}`);
@@ -1601,9 +1538,10 @@ function renderCityPanel(panel, city) {
 
     html += `<button class="action-btn" ${disabled ? 'disabled' : ''} onclick="trainUnit('${city.id}','${uId}')">
       ${u.icon} ${u.name} <span class="cost">${costStr.join(' ')}</span>
+      <span class="tooltip-text"><strong>${u.name}</strong><br>ATK: ${u.attack} · DEF: ${u.defense} · HP: ${u.hp} · MOV: ${u.move}${u.range ? ' · RNG: '+u.range : ''}${u.siegeBonus ? ' · Siege: +'+u.siegeBonus : ''}<br>${u.melee ? 'Melee unit — must be adjacent to attack.' : 'Ranged unit — can attack from '+u.range+' tiles away.'}</span>
     </button>`;
-    if (!hasPrereq) html += `<div style="font-size:0.65rem; color:var(--red); margin: -2px 0 4px 8px;">Requires: ${TECHS[u.prereq]?.name}</div>`;
-    if (!spotFree) html += `<div style="font-size:0.65rem; color:var(--red); margin: -2px 0 4px 8px;">City tile occupied</div>`;
+    if (!hasPrereq) html += `<div style="font-size:0.65rem;color:var(--red);margin:-2px 0 4px 8px;">Requires: ${TECHS[u.prereq]?.name}</div>`;
+    if (!spotFree) html += `<div style="font-size:0.65rem;color:var(--red);margin:-2px 0 4px 8px;">City tile occupied</div>`;
   }
 
   panel.innerHTML = html;
@@ -1611,59 +1549,50 @@ function renderCityPanel(panel, city) {
 
 function renderUnitPanel(panel, unit) {
   const uDef = UNITS[unit.type];
-  const state = STATES[unit.owner];
-  let atk = uDef.attack;
-  let def = uDef.defense;
-
-  if (unit.type === 'cavalry' && state.cavalryBonus) atk += state.cavalryBonus;
-  if (uDef.range && state.rangedBonus) atk += state.rangedBonus;
-
-  for (const techId of players[unit.owner].techs) {
-    const tech = TECHS[techId];
-    if (tech.effect.globalAttack) atk += tech.effect.globalAttack;
-  }
-
-  const barracksBonus = cities.some(c => c.owner === unit.owner && c.buildings.includes('barracks'));
-  if (barracksBonus) { atk += 1; def += 1; }
+  const isBarbarian = unit.owner === 'barbarian';
+  const atk = getUnitAttack(unit);
+  const def = getUnitDefense(unit);
 
   let html = `<h3>${uDef.icon} ${uDef.name}</h3>`;
-  html += `<div class="info-row"><span class="label">Owner</span><span>${state.name}</span></div>`;
+  html += `<div class="info-row"><span class="label">Owner</span><span>${isBarbarian ? '🗡️ Barbarian' : STATES[unit.owner].name}</span></div>`;
   html += `<div class="info-row"><span class="label">HP</span><span>${unit.hp}/${unit.maxHp}</span></div>`;
   html += `<div class="info-row"><span class="label">Attack</span><span>${atk}</span></div>`;
   html += `<div class="info-row"><span class="label">Defense</span><span>${def}</span></div>`;
   html += `<div class="info-row"><span class="label">Movement</span><span>${uDef.move}</span></div>`;
-  if (uDef.range) html += `<div class="info-row"><span class="label">Range</span><span>${uDef.range}</span></div>`;
+  html += `<div class="info-row"><span class="label">Type</span><span>${uDef.melee ? 'Melee' : 'Ranged ('+uDef.range+')'}</span></div>`;
+  if (uDef.siegeBonus) html += `<div class="info-row"><span class="label">Siege Bonus</span><span>+${uDef.siegeBonus}</span></div>`;
   html += `<div class="info-row"><span class="label">Status</span><span>${unit.moved ? 'Exhausted' : 'Ready'}</span></div>`;
 
   if (unit.owner === currentPlayer) {
-    html += `<button class="action-btn" style="margin-top: 12px; background: #5a1a1a; border-color: #c0392b;" onclick="disbandUnit('${unit.id}')">Disband Unit</button>`;
+    html += `<button class="action-btn" style="margin-top:12px;background:#5a1a1a;border-color:#c0392b;" onclick="disbandUnit('${unit.id}')">Disband Unit</button>`;
   }
-
   panel.innerHTML = html;
 }
 
 function renderTilePanel(panel, hex) {
   const tile = mapData[hex.row][hex.col];
   const t = TERRAIN[tile.terrain];
-
   let html = `<h3>${t.name}</h3>`;
+  html += `<p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:8px;">${t.desc}</p>`;
   html += `<div class="info-row"><span class="label">Position</span><span>(${hex.col}, ${hex.row})</span></div>`;
-  html += `<div class="info-row"><span class="label">Food</span><span>🌾 ${t.food}</span></div>`;
-  html += `<div class="info-row"><span class="label">Gold</span><span>💰 ${t.gold}</span></div>`;
-  html += `<div class="info-row"><span class="label">Iron</span><span>⚔️ ${t.iron}</span></div>`;
+  html += `<div class="info-row"><span class="label">Food yield</span><span>🌾 ${t.food}</span></div>`;
+  html += `<div class="info-row"><span class="label">Gold yield</span><span>💰 ${t.gold}</span></div>`;
+  html += `<div class="info-row"><span class="label">Iron yield</span><span>⚔️ ${t.iron}</span></div>`;
+  html += `<div class="info-row"><span class="label">Culture yield</span><span>📜 ${t.culture}</span></div>`;
   html += `<div class="info-row"><span class="label">Defense</span><span>🛡️ ${t.defense >= 0 ? '+' : ''}${t.defense}</span></div>`;
   html += `<div class="info-row"><span class="label">Move cost</span><span>${t.moveCost >= 99 ? 'Impassable' : t.moveCost}</span></div>`;
-
   if (tile.owner) {
-    html += `<div class="info-row"><span class="label">Owner</span><span style="color:${STATES[tile.owner].lightColor}">${STATES[tile.owner].name}</span></div>`;
+    const ownerName = tile.owner === 'barbarian' ? '🗡️ Barbarian' : STATES[tile.owner].name;
+    html += `<div class="info-row"><span class="label">Owner</span><span>${ownerName}</span></div>`;
   }
 
-  const unitHere = units.find(u => u.col === hex.col && u.row === hex.row);
+  const allUnits = [...units, ...barbarians];
+  const unitHere = allUnits.find(u => u.col === hex.col && u.row === hex.row);
   if (unitHere) {
     const ud = UNITS[unitHere.type];
-    html += `<div class="info-row" style="margin-top: 8px;"><span class="label">Unit</span><span>${ud.icon} ${ud.name} (${STATES[unitHere.owner].name})</span></div>`;
+    const ownerName = unitHere.owner === 'barbarian' ? 'Barbarian' : STATES[unitHere.owner].name;
+    html += `<div class="info-row" style="margin-top:8px"><span class="label">Unit</span><span>${ud.icon} ${ud.name} (${ownerName})</span></div>`;
   }
-
   panel.innerHTML = html;
 }
 
@@ -1675,12 +1604,9 @@ function buildBuilding(cityId, buildingId) {
   const city = cities.find(c => c.id === cityId);
   const b = BUILDINGS[buildingId];
   if (!city || !canAfford(currentPlayer, b.cost)) return;
-
   spendResources(currentPlayer, b.cost);
   city.buildings.push(buildingId);
-
   if (b.effect.defense) city.defense += b.effect.defense;
-
   showToast(`${b.icon} ${b.name} built in ${city.name}!`);
   updateResourceDisplay();
   updateRightPanel();
@@ -1690,43 +1616,27 @@ function trainUnit(cityId, unitType) {
   const city = cities.find(c => c.id === cityId);
   const u = UNITS[unitType];
   const p = players[currentPlayer];
-
   let cost = { ...u.cost };
-  if (p.state.ironDiscount && cost.iron) {
-    cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
-  }
-
+  if (p.state.ironDiscount && cost.iron) cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
   if (!city || !canAfford(currentPlayer, cost)) return;
-
   spendResources(currentPlayer, cost);
 
-  const unitId = `${currentPlayer}_${unitType}_${Date.now()}`;
   units.push({
-    id: unitId,
-    type: unitType,
-    owner: currentPlayer,
-    col: city.col,
-    row: city.row,
-    hp: u.hp,
-    maxHp: u.hp,
-    moved: true,
-    attacked: true
+    id: `${currentPlayer}_${unitType}_${Date.now()}`,
+    type: unitType, owner: currentPlayer,
+    col: city.col, row: city.row,
+    hp: u.hp, maxHp: u.hp,
+    moved: true, attacked: true
   });
-
   showToast(`${u.icon} ${u.name} trained!`);
-  updateResourceDisplay();
-  updateRightPanel();
-  render();
+  updateResourceDisplay(); updateRightPanel(); render();
 }
 
 function disbandUnit(unitId) {
   units = units.filter(u => u.id !== unitId);
-  selectedUnit = null;
-  moveHighlights = [];
-  attackHighlights = [];
+  selectedUnit = null; moveHighlights = []; attackHighlights = [];
   showToast('Unit disbanded.');
-  updateRightPanel();
-  render();
+  updateRightPanel(); render();
 }
 
 // ============================================================
@@ -1734,51 +1644,40 @@ function disbandUnit(unitId) {
 // ============================================================
 
 function openTechTree() {
-  const modal = document.getElementById('tech-modal');
   const grid = document.getElementById('tech-grid');
   const p = players[currentPlayer];
-
   let html = '';
   for (const [tId, tech] of Object.entries(TECHS)) {
     const researched = p.techs.has(tId);
     const prereqsMet = tech.prereq.every(pr => p.techs.has(pr));
     const available = !researched && prereqsMet;
-    const locked = !researched && !prereqsMet;
-
     let costVal = tech.cost;
     if (p.state.techDiscount) costVal = Math.ceil(costVal * (1 - p.state.techDiscount));
     const affordable = p.culture >= costVal;
-
-    let cls = researched ? 'researched' : (locked ? 'locked' : (available ? 'available' : ''));
+    const cls = researched ? 'researched' : (!prereqsMet ? 'locked' : (available ? 'available' : ''));
 
     html += `<div class="tech-card ${cls}" onclick="${available && affordable ? `researchTech('${tId}')` : ''}">
       <div class="tech-name">${tech.icon} ${tech.name}</div>
       <div class="tech-cost">${researched ? '✓ Researched' : `📜 ${costVal} culture`}</div>
       <div class="tech-desc">${tech.desc}</div>
-      ${locked ? `<div class="tech-prereq">Requires: ${tech.prereq.map(pr => TECHS[pr].name).join(', ')}</div>` : ''}
-      ${available && !affordable ? `<div class="tech-prereq">Need more culture</div>` : ''}
+      ${!prereqsMet ? `<div class="tech-prereq">Requires: ${tech.prereq.map(pr => TECHS[pr].name).join(', ')}</div>` : ''}
+      ${available && !affordable ? `<div class="tech-prereq">Need ${costVal - p.culture} more culture</div>` : ''}
     </div>`;
   }
-
   grid.innerHTML = html;
-  modal.classList.add('active');
+  document.getElementById('tech-modal').classList.add('active');
 }
 
-function closeTechTree() {
-  document.getElementById('tech-modal').classList.remove('active');
-}
+function closeTechTree() { document.getElementById('tech-modal').classList.remove('active'); }
 
 function researchTech(techId) {
   const p = players[currentPlayer];
   const tech = TECHS[techId];
   let cost = tech.cost;
   if (p.state.techDiscount) cost = Math.ceil(cost * (1 - p.state.techDiscount));
-
   if (p.culture < cost) return;
-
   p.culture -= cost;
   p.techs.add(techId);
-
   showToast(`${tech.icon} ${tech.name} researched!`);
   updateResourceDisplay();
   openTechTree();
@@ -1789,30 +1688,23 @@ function researchTech(techId) {
 // ============================================================
 
 function openDiplomacy() {
-  const modal = document.getElementById('diplo-modal');
   const content = document.getElementById('diplo-content');
   const p = players[currentPlayer];
-
   let html = '';
   for (const [sId, state] of Object.entries(STATES)) {
-    if (sId === currentPlayer) continue;
-    if (!players[sId].alive) continue;
-
+    if (sId === currentPlayer || !players[sId]?.alive) continue;
     const rel = p.relations[sId];
-    const relLabel = rel === 'war' ? 'At War' : (rel === 'alliance' ? 'Allied' : 'Neutral');
-    const relClass = rel;
-
+    const relLabel = rel === 'war' ? 'At War' : rel === 'alliance' ? 'Allied' : 'Neutral';
     const theirCities = cities.filter(c => c.owner === sId).length;
     const theirUnits = units.filter(u => u.owner === sId).length;
 
     html += `<div class="diplo-row">
       <div class="state-color" style="background:${state.lightColor}"></div>
       <div class="state-name">
-        <strong>${state.hanzi} ${state.name}</strong>
-        <div style="font-size:0.7rem; color:var(--text-dim)">${theirCities} cities · ${theirUnits} units</div>
+        <strong>${state.hanzi} ${state.name}</strong>${!state.major ? ' <span style="font-size:0.65rem;color:var(--text-dim)">(minor)</span>' : ''}
+        <div style="font-size:0.7rem;color:var(--text-dim)">${theirCities} cities · ${theirUnits} units</div>
       </div>
-      <span class="relation ${relClass}">${relLabel}</span>`;
-
+      <span class="relation ${rel}">${relLabel}</span>`;
     if (rel === 'peace') {
       html += `<button class="diplo-action" onclick="declareWar('${sId}')">⚔️ War</button>`;
       html += `<button class="diplo-action" onclick="proposeAlliance('${sId}')">🤝 Ally</button>`;
@@ -1821,17 +1713,24 @@ function openDiplomacy() {
     } else if (rel === 'alliance') {
       html += `<button class="diplo-action" onclick="breakAlliance('${sId}')">💔 Break</button>`;
     }
-
     html += `</div>`;
   }
 
+  if (barbarians.length > 0) {
+    html += `<div class="diplo-row">
+      <div class="state-color" style="background:#cc3333"></div>
+      <div class="state-name"><strong>🗡️ Barbarians</strong>
+        <div style="font-size:0.7rem;color:var(--text-dim)">${barbarians.length} raiders roaming the land</div>
+      </div>
+      <span class="relation war">Hostile</span>
+    </div>`;
+  }
+
   content.innerHTML = html;
-  modal.classList.add('active');
+  document.getElementById('diplo-modal').classList.add('active');
 }
 
-function closeDiplomacy() {
-  document.getElementById('diplo-modal').classList.remove('active');
-}
+function closeDiplomacy() { document.getElementById('diplo-modal').classList.remove('active'); }
 
 function declareWar(targetId) {
   players[currentPlayer].relations[targetId] = 'war';
@@ -1841,36 +1740,21 @@ function declareWar(targetId) {
 }
 
 function offerPeace(targetId) {
-  if (players[currentPlayer].gold < 10) {
-    showToast('Not enough gold for peace offering.');
-    return;
-  }
+  if (players[currentPlayer].gold < 10) { showToast('Not enough gold.'); return; }
   players[currentPlayer].gold -= 10;
   players[currentPlayer].relations[targetId] = 'peace';
   players[targetId].relations[currentPlayer] = 'peace';
-  showToast(`☮️ Peace established with ${STATES[targetId].name}.`);
-  updateResourceDisplay();
-  openDiplomacy();
+  showToast(`☮️ Peace with ${STATES[targetId].name}.`);
+  updateResourceDisplay(); openDiplomacy();
 }
 
 function proposeAlliance(targetId) {
-  if (players[currentPlayer].gold < 15) {
-    showToast('Need 15 gold for alliance.');
-    return;
-  }
+  if (players[currentPlayer].gold < 15) { showToast('Need 15 gold.'); return; }
   players[currentPlayer].gold -= 15;
   players[currentPlayer].relations[targetId] = 'alliance';
   players[targetId].relations[currentPlayer] = 'alliance';
-
-  for (const [otherId, rel] of Object.entries(players[targetId].relations)) {
-    if (rel === 'war' && otherId !== currentPlayer) {
-      // ally doesn't auto-join wars
-    }
-  }
-
-  showToast(`🤝 Alliance formed with ${STATES[targetId].name}!`);
-  updateResourceDisplay();
-  openDiplomacy();
+  showToast(`🤝 Alliance with ${STATES[targetId].name}!`);
+  updateResourceDisplay(); openDiplomacy();
 }
 
 function breakAlliance(targetId) {
@@ -1897,7 +1781,6 @@ function runAI(playerId) {
   const myCities = cities.filter(c => c.owner === playerId);
   const myUnits = units.filter(u => u.owner === playerId);
 
-  // Build buildings
   for (const city of myCities) {
     for (const [bId, b] of Object.entries(BUILDINGS)) {
       if (city.buildings.includes(bId)) continue;
@@ -1911,66 +1794,48 @@ function runAI(playerId) {
     }
   }
 
-  // Research
   for (const [tId, tech] of Object.entries(TECHS)) {
     if (p.techs.has(tId)) continue;
     if (!tech.prereq.every(pr => p.techs.has(pr))) continue;
     let cost = tech.cost;
     if (p.state.techDiscount) cost = Math.ceil(cost * (1 - p.state.techDiscount));
-    if (p.culture >= cost) {
-      p.culture -= cost;
-      p.techs.add(tId);
-      break;
-    }
+    if (p.culture >= cost) { p.culture -= cost; p.techs.add(tId); break; }
   }
 
-  // Train units
   if (myUnits.length < myCities.length * 3 + 2) {
     for (const city of myCities) {
-      if (units.some(u => u.col === city.col && u.row === city.row)) continue;
-
+      if ([...units, ...barbarians].some(u => u.col === city.col && u.row === city.row)) continue;
       let bestUnit = 'militia';
-      for (const [uId, u] of Object.entries(UNITS)) {
+      for (const [uId] of Object.entries(UNITS)) {
+        const u = UNITS[uId];
         if (u.prereq && !p.techs.has(u.prereq)) continue;
         let cost = { ...u.cost };
-        if (p.state.ironDiscount && cost.iron) {
-          cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
-        }
-        if (canAfford(playerId, cost)) {
-          bestUnit = uId;
-        }
+        if (p.state.ironDiscount && cost.iron) cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
+        if (canAfford(playerId, cost)) bestUnit = uId;
       }
-
       let cost = { ...UNITS[bestUnit].cost };
-      if (p.state.ironDiscount && cost.iron) {
-        cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
-      }
+      if (p.state.ironDiscount && cost.iron) cost.iron = Math.max(0, Math.ceil(cost.iron * (1 - p.state.ironDiscount)));
       if (canAfford(playerId, cost)) {
         spendResources(playerId, cost);
         units.push({
-          id: `${playerId}_${bestUnit}_${Date.now()}_${Math.random()}`,
-          type: bestUnit,
-          owner: playerId,
-          col: city.col,
-          row: city.row,
-          hp: UNITS[bestUnit].hp,
-          maxHp: UNITS[bestUnit].hp,
-          moved: false,
-          attacked: false
+          id: `${playerId}_${bestUnit}_${turn}_${Math.random().toString(36).slice(2,6)}`,
+          type: bestUnit, owner: playerId,
+          col: city.col, row: city.row,
+          hp: UNITS[bestUnit].hp, maxHp: UNITS[bestUnit].hp,
+          moved: false, attacked: false
         });
       }
     }
   }
 
-  // AI diplomacy — declare war on neighbors if strong enough
+  // AI diplomacy
   const warTargets = Object.keys(STATES).filter(s =>
-    s !== playerId && players[s].alive && p.relations[s] !== 'war' && p.relations[s] !== 'alliance'
+    s !== playerId && players[s]?.alive && p.relations[s] !== 'war' && p.relations[s] !== 'alliance'
   );
-  if (myUnits.length >= 5 && warTargets.length > 0 && Math.random() < 0.08) {
+  if (myUnits.length >= 4 && warTargets.length > 0 && Math.random() < 0.06) {
     let closest = null, closestDist = Infinity;
     for (const t of warTargets) {
-      const tCities = cities.filter(c => c.owner === t);
-      for (const tc of tCities) {
+      for (const tc of cities.filter(c => c.owner === t)) {
         for (const mc of myCities) {
           const d = hexDistance(mc.col, mc.row, tc.col, tc.row);
           if (d < closestDist) { closestDist = d; closest = t; }
@@ -1980,117 +1845,95 @@ function runAI(playerId) {
     if (closest && closestDist < 8) {
       p.relations[closest] = 'war';
       players[closest].relations[playerId] = 'war';
-      if (closest === currentPlayer) {
-        showToast(`⚔️ ${STATES[playerId].name} declares war on you!`);
-      }
+      if (closest === currentPlayer) showToast(`⚔️ ${STATES[playerId].name} declares war on you!`);
     }
   }
 
-  // Move units
+  // Move & attack
   for (const unit of myUnits) {
-    unit.moved = false;
-    unit.attacked = false;
-
+    unit.moved = false; unit.attacked = false;
     const uDef = UNITS[unit.type];
 
-    // Find nearest enemy
     let nearestEnemy = null, nearestDist = Infinity;
-    const enemies = units.filter(u => u.owner !== playerId && p.relations[u.owner] === 'war');
+    const enemies = [...units.filter(u => u.owner !== playerId && p.relations[u.owner] === 'war'),
+                     ...barbarians];
     const enemyCities2 = cities.filter(c => c.owner !== playerId && p.relations[c.owner] === 'war');
 
     for (const e of enemies) {
       const d = hexDistance(unit.col, unit.row, e.col, e.row);
-      if (d < nearestDist) { nearestDist = d; nearestEnemy = { col: e.col, row: e.row, type: 'unit' }; }
+      if (d < nearestDist) { nearestDist = d; nearestEnemy = { col: e.col, row: e.row }; }
     }
     for (const e of enemyCities2) {
       const d = hexDistance(unit.col, unit.row, e.col, e.row);
-      if (d < nearestDist) { nearestDist = d; nearestEnemy = { col: e.col, row: e.row, type: 'city' }; }
+      if (d < nearestDist) { nearestDist = d; nearestEnemy = { col: e.col, row: e.row }; }
     }
 
     if (nearestEnemy && nearestDist <= 1) {
-      // Attack
-      const tUnit = units.find(u => u.col === nearestEnemy.col && u.row === nearestEnemy.row && u.owner !== playerId);
+      let atkPower = getUnitAttack(unit);
+      const tUnit = [...units, ...barbarians].find(u => u.col === nearestEnemy.col && u.row === nearestEnemy.row && u.owner !== playerId);
       const tCity = cities.find(c => c.col === nearestEnemy.col && c.row === nearestEnemy.row && c.owner !== playerId);
-
-      let atkPower = uDef.attack;
-      if (unit.type === 'cavalry' && p.state.cavalryBonus) atkPower += p.state.cavalryBonus;
-      if (uDef.range && p.state.rangedBonus) atkPower += p.state.rangedBonus;
-      for (const techId of p.techs) {
-        if (TECHS[techId].effect.globalAttack) atkPower += TECHS[techId].effect.globalAttack;
-      }
 
       if (tUnit) {
         const defDef = UNITS[tUnit.type];
         const defTerrain = TERRAIN[mapData[tUnit.row][tUnit.col].terrain];
-        const damage = Math.max(1, atkPower - Math.floor((defDef.defense + defTerrain.defense) / 2) + Math.floor(Math.random() * 3));
+        const damage = Math.max(1, atkPower - Math.floor((getUnitDefense(tUnit) + defTerrain.defense) / 2) + Math.floor(Math.random() * 3));
         tUnit.hp -= damage;
-        if (!uDef.range) {
-          const counterDmg = Math.max(0, defDef.attack - Math.floor(uDef.defense / 2) - 1);
+        if (uDef.melee) {
+          const counterDmg = Math.max(0, getUnitAttack(tUnit) - Math.floor(uDef.defense / 2) - 1);
           unit.hp -= counterDmg;
         }
         if (tUnit.hp <= 0) {
-          units = units.filter(u => u.id !== tUnit.id);
-          if (tUnit.owner === currentPlayer) showToast(`💀 Your ${UNITS[tUnit.type].name} was killed by ${STATES[playerId].name}!`);
-          if (!uDef.range) {
-            unit.col = nearestEnemy.col;
-            unit.row = nearestEnemy.row;
+          const isBarbTarget = tUnit.owner === 'barbarian';
+          if (isBarbTarget) barbarians = barbarians.filter(b => b.id !== tUnit.id);
+          else units = units.filter(u => u.id !== tUnit.id);
+          if (tUnit.owner === currentPlayer) showToast(`💀 ${STATES[playerId].name} killed your ${defDef.name}!`);
+          if (uDef.melee) {
+            unit.col = nearestEnemy.col; unit.row = nearestEnemy.row;
             mapData[nearestEnemy.row][nearestEnemy.col].owner = playerId;
           }
         }
-        if (unit.hp <= 0) {
-          units = units.filter(u => u.id !== unit.id);
-          continue;
-        }
+        if (unit.hp <= 0) { units = units.filter(u => u.id !== unit.id); continue; }
       }
-
       if (tCity) {
         let atkStr = atkPower;
         if (uDef.siegeBonus) atkStr += uDef.siegeBonus;
         const damage = Math.max(1, atkStr - Math.floor(tCity.defense / 3));
         tCity.hp -= damage;
+        if (tCity.owner === currentPlayer) showToast(`⚠️ ${STATES[playerId].name} attacks ${tCity.name}!`);
         if (tCity.hp <= 0) {
           captureCity(tCity, playerId);
-          if (!uDef.range) {
-            unit.col = nearestEnemy.col;
-            unit.row = nearestEnemy.row;
-          }
+          if (uDef.melee) { unit.col = nearestEnemy.col; unit.row = nearestEnemy.row; }
         }
       }
-      unit.moved = true;
-      unit.attacked = true;
+      unit.moved = true; unit.attacked = true;
     } else if (nearestEnemy) {
-      // Move toward enemy
       const neighbors = getHexNeighbors(unit.col, unit.row);
       let bestMove = null, bestDist = nearestDist;
       for (const n of neighbors) {
-        const tile = mapData[n.row][n.col];
-        if (TERRAIN[tile.terrain].moveCost >= 99) continue;
-        if (units.some(u => u.col === n.col && u.row === n.row)) continue;
+        if (TERRAIN[mapData[n.row][n.col].terrain].moveCost >= 99) continue;
+        if ([...units, ...barbarians].some(u => u.col === n.col && u.row === n.row)) continue;
         const d = hexDistance(n.col, n.row, nearestEnemy.col, nearestEnemy.row);
         if (d < bestDist) { bestDist = d; bestMove = n; }
       }
       if (bestMove) {
-        unit.col = bestMove.col;
-        unit.row = bestMove.row;
-        if (!mapData[bestMove.row][bestMove.col].owner) {
+        unit.col = bestMove.col; unit.row = bestMove.row;
+        if (!mapData[bestMove.row][bestMove.col].owner || mapData[bestMove.row][bestMove.col].owner === 'barbarian') {
           mapData[bestMove.row][bestMove.col].owner = playerId;
         }
       }
       unit.moved = true;
     } else {
-      // Wander / expand territory
-      const neighbors = getHexNeighbors(unit.col, unit.row);
-      const unclaimed = neighbors.filter(n => {
-        const tile = mapData[n.row][n.col];
-        return tile.owner !== playerId && TERRAIN[tile.terrain].moveCost < 99 && !units.some(u => u.col === n.col && u.row === n.row);
-      });
-      if (unclaimed.length > 0) {
-        const target = unclaimed[Math.floor(Math.random() * unclaimed.length)];
-        unit.col = target.col;
-        unit.row = target.row;
+      const neighbors = getHexNeighbors(unit.col, unit.row)
+        .filter(n => {
+          const tile = mapData[n.row][n.col];
+          return tile.owner !== playerId && TERRAIN[tile.terrain].moveCost < 99 &&
+            ![...units, ...barbarians].some(u => u.col === n.col && u.row === n.row);
+        });
+      if (neighbors.length > 0) {
+        const target = neighbors[Math.floor(Math.random() * neighbors.length)];
+        unit.col = target.col; unit.row = target.row;
         mapData[target.row][target.col].owner = playerId;
-        const nn = getHexNeighbors(target.col, target.row);
-        for (const n of nn) {
+        for (const n of getHexNeighbors(target.col, target.row)) {
           if (!mapData[n.row][n.col].owner) mapData[n.row][n.col].owner = playerId;
         }
       }
@@ -2098,22 +1941,23 @@ function runAI(playerId) {
     }
   }
 
-  // Heal units in friendly territory
+  // Heal
   for (const unit of units.filter(u => u.owner === playerId)) {
     const tile = mapData[unit.row][unit.col];
     if (tile.owner === playerId && unit.hp < unit.maxHp) {
-      unit.hp = Math.min(unit.maxHp, unit.hp + 1);
+      let heal = 1;
+      if (p.state.healBonus && tile.owner === playerId) heal += p.state.healBonus;
+      unit.hp = Math.min(unit.maxHp, unit.hp + heal);
     }
-    const inCity = cities.some(c => c.col === unit.col && c.row === unit.row && c.owner === playerId);
-    if (inCity && unit.hp < unit.maxHp) {
+    if (cities.some(c => c.col === unit.col && c.row === unit.row && c.owner === playerId) && unit.hp < unit.maxHp) {
       unit.hp = Math.min(unit.maxHp, unit.hp + 2);
     }
   }
 
-  // Heal cities
   for (const city of myCities) {
-    if (city.hp < city.maxHp) {
-      city.hp = Math.min(city.maxHp, city.hp + 1);
+    if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
+    if (p.food >= city.population * 2 && city.population < 10) {
+      city.population++; city.maxHp += 2; city.hp += 2;
     }
   }
 }
@@ -2123,7 +1967,6 @@ function runAI(playerId) {
 // ============================================================
 
 function endTurn() {
-  // Player income
   const income = getIncome(currentPlayer);
   const p = players[currentPlayer];
   p.food += income.food;
@@ -2135,52 +1978,37 @@ function endTurn() {
   for (const unit of units.filter(u => u.owner === currentPlayer)) {
     const tile = mapData[unit.row][unit.col];
     if (tile.owner === currentPlayer && unit.hp < unit.maxHp) {
-      unit.hp = Math.min(unit.maxHp, unit.hp + 1);
+      let heal = 1;
+      if (p.state.healBonus) heal += p.state.healBonus;
+      unit.hp = Math.min(unit.maxHp, unit.hp + heal);
     }
-    const inCity = cities.some(c => c.col === unit.col && c.row === unit.row && c.owner === currentPlayer);
-    if (inCity && unit.hp < unit.maxHp) {
+    if (cities.some(c => c.col === unit.col && c.row === unit.row && c.owner === currentPlayer) && unit.hp < unit.maxHp) {
       unit.hp = Math.min(unit.maxHp, unit.hp + 2);
     }
   }
 
-  // Heal cities
   for (const city of cities.filter(c => c.owner === currentPlayer)) {
-    if (city.hp < city.maxHp) {
-      city.hp = Math.min(city.maxHp, city.hp + 1);
-    }
-  }
-
-  // Population growth
-  for (const city of cities.filter(c => c.owner === currentPlayer)) {
+    if (city.hp < city.maxHp) city.hp = Math.min(city.maxHp, city.hp + 1);
     if (p.food >= city.population * 2 && city.population < 10) {
-      city.population++;
-      city.maxHp += 2;
-      city.hp += 2;
+      city.population++; city.maxHp += 2; city.hp += 2;
     }
   }
 
-  // AI turns
   for (const sId of Object.keys(STATES)) {
     if (sId === currentPlayer) continue;
     runAI(sId);
   }
 
-  // Reset units
-  for (const unit of units) {
-    unit.moved = false;
-    unit.attacked = false;
-  }
+  spawnBarbarians();
+  runBarbarians();
+
+  for (const unit of units) { unit.moved = false; unit.attacked = false; }
 
   turn++;
-  selectedUnit = null;
-  selectedCity = null;
-  selectedHex = null;
-  moveHighlights = [];
-  attackHighlights = [];
+  selectedUnit = null; selectedCity = null; selectedHex = null;
+  moveHighlights = []; attackHighlights = [];
 
-  updateResourceDisplay();
-  updateRightPanel();
-  render();
+  updateResourceDisplay(); updateRightPanel(); render();
   checkVictory();
 
   const year = 475 - (turn - 1) * 5;
@@ -2191,17 +2019,15 @@ function endTurn() {
 function updateResourceDisplay() {
   const p = players[currentPlayer];
   const income = getIncome(currentPlayer);
-
   document.getElementById('res-food').textContent = p.food;
   document.getElementById('res-gold').textContent = p.gold;
   document.getElementById('res-iron').textContent = p.iron;
   document.getElementById('res-culture').textContent = p.culture;
-
-  const formatDelta = (val) => val >= 0 ? `+${val}` : `${val}`;
-  document.getElementById('delta-food').textContent = formatDelta(income.food);
-  document.getElementById('delta-gold').textContent = formatDelta(income.gold);
-  document.getElementById('delta-iron').textContent = formatDelta(income.iron);
-  document.getElementById('delta-culture').textContent = formatDelta(income.culture);
+  const fmt = v => v >= 0 ? `+${v}` : `${v}`;
+  document.getElementById('delta-food').textContent = fmt(income.food);
+  document.getElementById('delta-gold').textContent = fmt(income.gold);
+  document.getElementById('delta-iron').textContent = fmt(income.iron);
+  document.getElementById('delta-culture').textContent = fmt(income.culture);
 }
 
 // ============================================================
@@ -2210,25 +2036,17 @@ function updateResourceDisplay() {
 
 function checkVictory() {
   const alive = Object.values(players).filter(p => p.alive);
-
   if (alive.length === 1) {
-    const winner = alive[0];
-    showVictory(
-      winner.id === currentPlayer ? 'Victory!' : 'Defeat',
-      winner.id === currentPlayer
-        ? `${STATES[winner.id].name} has unified all under heaven! 天下一统!`
-        : `${STATES[winner.id].name} has conquered all states.`
-    );
+    const w = alive[0];
+    showVictory(w.id === currentPlayer ? 'Victory!' : 'Defeat',
+      w.id === currentPlayer ? `${STATES[w.id].name} has unified all under heaven! 天下一统!`
+        : `${STATES[w.id].name} has conquered all states.`);
     return;
   }
-
   if (!players[currentPlayer].alive) {
     showVictory('Defeat', 'Your state has been eliminated. The mandate of heaven passes to another.');
   }
-
-  // Cultural victory: 100 culture
-  const p = players[currentPlayer];
-  if (p.culture >= 100 && p.techs.has('philosophy')) {
+  if (players[currentPlayer].culture >= 150 && players[currentPlayer].techs.has('philosophy')) {
     showVictory('Cultural Victory!', `${STATES[currentPlayer].name}'s philosophy and culture have won the hearts of all under heaven!`);
   }
 }
@@ -2243,30 +2061,37 @@ function showVictory(title, text) {
 // UI HELPERS
 // ============================================================
 
+let toastTimer = null;
 function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-function setStatus(msg) {
-  document.getElementById('status-msg').textContent = msg;
-}
+function setStatus(msg) { document.getElementById('status-msg').textContent = msg; }
 
 // ============================================================
-// START GAME
+// START
 // ============================================================
 
 function buildTitleScreen() {
   const container = document.getElementById('state-select');
-  let html = '';
+  let html = '<div class="section-label">Major Kingdoms</div>';
   for (const [sId, state] of Object.entries(STATES)) {
+    if (!state.major) continue;
     html += `<button class="state-btn" onclick="startGame('${sId}')">
-      <span class="hanzi">${state.hanzi}</span>
-      <span class="name">${state.name}</span>
-      <span class="bonus">${state.bonus}</span>
-      <span class="desc">${state.desc}</span>
+      <span class="hanzi">${state.hanzi}</span><span class="name">${state.name}</span>
+      <span class="bonus">${state.bonus}</span><span class="desc">${state.desc}</span>
+    </button>`;
+  }
+  html += '<div class="section-label">Minor Kingdoms</div>';
+  for (const [sId, state] of Object.entries(STATES)) {
+    if (state.major) continue;
+    html += `<button class="state-btn minor" onclick="startGame('${sId}')">
+      <span class="hanzi">${state.hanzi}</span><span class="name">${state.name}</span>
+      <span class="bonus">${state.bonus}</span><span class="desc">${state.desc}</span>
     </button>`;
   }
   container.innerHTML = html;
@@ -2275,16 +2100,11 @@ function buildTitleScreen() {
 function startGame(stateId) {
   currentPlayer = stateId;
   gameStarted = true;
-
   document.getElementById('title-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
 
   generateMap();
-
-  for (const sId of Object.keys(STATES)) {
-    initPlayer(sId);
-  }
-
+  for (const sId of Object.keys(STATES)) initPlayer(sId);
   resizeCanvas();
 
   const pos = STATE_POSITIONS[stateId];
@@ -2292,36 +2112,21 @@ function startGame(stateId) {
   cameraX = x - canvas.width / 2;
   cameraY = y - canvas.height / 2;
 
-  updateResourceDisplay();
-  render();
-
-  setStatus(`Welcome, ruler of ${STATES[stateId].name}. Build your cities, research technologies, and conquer all under heaven.`);
+  updateResourceDisplay(); render();
+  setStatus(`Welcome, ruler of ${STATES[stateId].name}. Build, research, and conquer all under heaven.`);
 }
 
-window.addEventListener('resize', () => {
-  if (gameStarted) {
-    resizeCanvas();
-    render();
-  }
-});
+window.addEventListener('resize', () => { if (gameStarted) { resizeCanvas(); render(); } });
 
 document.addEventListener('keydown', e => {
   if (!gameStarted) return;
   if (e.key === 'Escape') {
-    selectedUnit = null;
-    selectedCity = null;
-    selectedHex = null;
-    moveHighlights = [];
-    attackHighlights = [];
-    closeTechTree();
-    closeDiplomacy();
-    updateRightPanel();
-    render();
+    selectedUnit = null; selectedCity = null; selectedHex = null;
+    moveHighlights = []; attackHighlights = [];
+    closeTechTree(); closeDiplomacy();
+    updateRightPanel(); render();
   }
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    endTurn();
-  }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); endTurn(); }
   if (e.key === 't') openTechTree();
   if (e.key === 'd') openDiplomacy();
 });
